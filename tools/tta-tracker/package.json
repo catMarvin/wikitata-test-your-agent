@@ -1,0 +1,15 @@
+{
+  "name": "tta-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "wikiTaTa Test Your Agent — tier-B token-tracking MCP (one read-only tool + passive Stop hook; zero coordination power)",
+  "bin": { "tta-tracker": "index.js" },
+  "scripts": {
+    "test": "node test/tracker.test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25.0"
+  }
+}
