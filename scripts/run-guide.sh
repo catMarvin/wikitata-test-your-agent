@@ -10,7 +10,7 @@
 #   3. Shows a formatted step-by-step guide for the run, and stays on screen.
 #
 # Usage: run-guide.sh [project] [run-id]     (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.9"
+HARNESS_VERSION="1.6.10"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
@@ -28,8 +28,9 @@ fi
 pbcopy < "$INSTR" || { echo "FAIL: could not load the clipboard — report this."; exit 1; }
 printf '%s\tguest\tguide_opened_clipboard_loaded\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$HOME/tta/run-times.log"
 
+W=$(tput cols 2>/dev/null); [ -n "$W" ] || W=80
 clear
-cat <<GUIDE
+fold -s -w "$W" <<GUIDE
 
  =====================================================================
    YOUR NEXT MOVES — THE RUN STARTS FROM THIS GUIDE

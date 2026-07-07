@@ -1,7 +1,7 @@
 #!/bin/bash
 # begin.sh — the guided run wizard. Run this ONE command in a fresh VM
 # Terminal window; from here every step is "[ PRESS RETURN ]".
-HARNESS_VERSION="1.6.9"
+HARNESS_VERSION="1.6.10"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 
 focus_main() {
@@ -16,8 +16,9 @@ osascript -e 'tell application "Finder" to set db to bounds of window of desktop
   -e 'tell application "Terminal" to set bounds of front window to {0, 25, sw * 3 div 5, sh - 80}' \
   >/dev/null 2>&1 || true
 
+W=$(tput cols 2>/dev/null); [ -n "$W" ] || W=80
 clear
-cat <<BANNER
+fold -s -w "$W" <<BANNER
 
  ======================================================================
    Welcome to the wikiTaTa "Test Your Agent" testing suite.
