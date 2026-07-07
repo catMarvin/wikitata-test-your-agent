@@ -21,7 +21,7 @@
 # guide_opened_clipboard_loaded into the timing log.
 #
 # Usage: run-guide.sh [project] [run-id]   (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.13"
+HARNESS_VERSION="1.6.14"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
@@ -29,6 +29,8 @@ RAW="https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main"
 INSTR="$HOME/tta/startup-instruction.txt"
 TLOG="$HOME/tta/run-times.log"
 MARK="$HOME/tta/.claude-launch.marker"
+ATTNF="$HOME/tta/attention"
+CAP_SECS="${TTA_CAP_SECS:-2700}"   # 45:00 — at the cap, attention jumps to the recording window
 export LANG="${LANG:-en_US.UTF-8}"
 
 mkdir -p "$HOME/tta"
@@ -53,19 +55,24 @@ TICK=0
 
 # Panel line queue. Attributes:
 #   n normal · b bold · c cyan-bold (structure) · g green-bold (done/live-ok)
-#   h steady highlighter (black on yellow)
-#   p pulsing highlighter (yellow)  · q pulsing highlighter (green)
+#   r red-bold · k label chip (cyan reverse) · h steady highlighter
+#   p pulsing highlighter (yellow) · q pulsing highlighter (green)
+# SINGLE-PULSE DISCIPLINE: p/q actually pulse ONLY while ~/tta/attention says
+# "guide" (or the file is absent — manual fallback); otherwise they render
+# steady, because exactly one window in the suite pulses at a time.
 L()  { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=n; }
 BL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=b; }
 CL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=c; }
 GL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=g; }
+RL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=r; }
+KL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=k; }
 HL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=h; }
 PL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=p; }
 QL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=q; }
 
 header() { # $1 = current phase 1..4 for the tracker
   local i=1 name
-  L ""
+  KL " ▌ RUN GUIDE ▐  read me — you never type here "
   CL " ╔══════════════════════════════════════════════════════════════╗"
   CL " ║   wikiTaTa TEST YOUR AGENT ▪ RUN GUIDE                        ║"
   CL " ╚══════════════════════════════════════════════════════════════╝"
@@ -88,12 +95,12 @@ while :; do
 
   # ---- advance the state machine from the run's real signals ----
   if grep -q "run_end" "$TLOG" 2>/dev/null; then
-    STATE=done
+    if [ "$STATE" != "done" ]; then STATE=done; echo guide > "$ATTNF"; fi
   else
     case "$STATE" in
       launch)
         if grep -q "claude_launch" "$TLOG" 2>/dev/null; then
-          touch "$MARK"; STATE=paste
+          touch "$MARK"; STATE=paste; echo guide > "$ATTNF"
         fi;;
       paste)
         if [ -d "$HOME/.claude/projects" ] && \
@@ -102,12 +109,20 @@ while :; do
           printf '%s\tguest\trun_live_detected\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$TLOG"
         fi;;
       live)
+        # 45:00 cap: fire the cross-window trigger ONCE — the recording
+        # window starts pulsing CLICK HERE / Ctrl-C, this guide goes steady
+        if [ "$LIVE_AT" -gt 0 ] && [ $(( $(date +%s) - LIVE_AT )) -ge "$CAP_SECS" ] && \
+           [ "$(cat "$ATTNF" 2>/dev/null)" != "recording" ]; then
+          echo recording > "$ATTNF"
+          printf '%s\tguest\tcap_reached_attention_to_recording\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$TLOG"
+        fi
         if ! pgrep -x screencapture >/dev/null 2>&1; then
-          STATE=wrapup
+          STATE=wrapup; echo guide > "$ATTNF"
           printf '%s\tguest\tguide_saw_recording_stop\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$TLOG"
         fi;;
     esac
   fi
+  ATTN=$(cat "$ATTNF" 2>/dev/null)
 
   # ---- build the current panel ----
   LINES=(); ATTRS=()
@@ -149,7 +164,13 @@ while :; do
       S=$(( $(date +%s) - LIVE_AT ))
       ET="$(printf %02d $((S/60))):$(printf %02d $((S%60)))"
       header 3
-      QL "  ▶▶ THE RUN IS LIVE - elapsed $ET - your persona: BASIC ◀◀ "
+      if [ "$S" -ge "$CAP_SECS" ]; then
+        RL "  ▶▶ 45:00 CAP REACHED at $ET - STOP THE RUN NOW ◀◀"
+        RL "     the SCREEN RECORDING window (bottom right) is pulsing:"
+        RL "     click it and press Ctrl-C."
+      else
+        QL "  ▶▶ THE RUN IS LIVE - elapsed $ET - your persona: BASIC ◀◀ "
+      fi
       L  ""
       BL "  YOUR ONLY MOVES WHILE THE RUN IS LIVE:"
       L  "    ▪ Agent asks a question?   Shortest sensible answer."
@@ -197,12 +218,17 @@ while :; do
     [ "$row" -gt "$ROWS" ] && break
     line="${LINES[$i]}"
     line="${line:0:$COLS}"
+    # pulse only while this window owns the attention token (or no wizard)
+    PULSE_OK=0
+    if [ -z "$ATTN" ] || [ "$ATTN" = "guide" ]; then PULSE_OK=1; fi
     case "${ATTRS[$i]}" in
       c) A='\033[1;36m';;
       g) A='\033[1;32m';;
+      r) A='\033[1;31m';;
+      k) A='\033[1;7;36m';;
       h) A='\033[1;30;43m';;
-      p) if [ "$P" -eq 1 ]; then A='\033[1;30;43m'; else A='\033[1m'; fi;;
-      q) if [ "$P" -eq 1 ]; then A='\033[1;30;42m'; else A='\033[1;32m'; fi;;
+      p) if [ "$PULSE_OK" -eq 1 ] && [ "$P" -eq 1 ]; then A='\033[1;30;43m'; else A='\033[1m'; fi;;
+      q) if [ "$PULSE_OK" -eq 1 ] && [ "$P" -eq 1 ]; then A='\033[1;30;42m'; else A='\033[1;32m'; fi;;
       b) A='\033[1m';;
       *) A='';;
     esac

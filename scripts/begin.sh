@@ -4,9 +4,14 @@
 # fresh (block-graphic header + colored step tracker + ONE pulsing
 # highlighter "PRESS RETURN" action) — the operator never sees a scrollback
 # wall, and the recording only ever shows the current step.
-HARNESS_VERSION="1.6.13"
+HARNESS_VERSION="1.6.14"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
+ATTNF="$HOME/tta/attention"
 export LANG="${LANG:-en_US.UTF-8}"
+
+apply_theme() { # apply a stock macOS Terminal profile to the FRONT window
+  [ -n "$1" ] && osascript -e "tell application \"Terminal\" to set current settings of front window to settings set \"$1\"" >/dev/null 2>&1 || true
+}
 
 focus_main() {
   osascript -e 'tell application "Terminal" to activate' \
@@ -31,7 +36,9 @@ hl()   { printf '\033[1;30;43m%s\033[0m\n' "$1"; ROW=$((ROW+1)); }
 
 page_top() { # $1 = current step 1..4 (0 = welcome page, no tracker)
   printf '\033[2J\033[H'; ROW=1
-  say ""
+  # while the wizard is asking, the MAIN window owns the suite's ONE pulse
+  mkdir -p "$HOME/tta"; echo main > "$ATTNF"
+  printf '\033[1;7;36m ▌ MAIN WINDOW ▐  this is where you type \033[0m\n'; ROW=$((ROW+1))
   cy  " ╔══════════════════════════════════════════════════════════════════╗"
   cy  " ║   wikiTaTa \"Test Your Agent\" ▪ guided run wizard                  ║"
   cy  " ╚══════════════════════════════════════════════════════════════════╝"
@@ -76,7 +83,7 @@ press_return() { # $1 pulses (~1s highlighter <-> bold) until Return; $2.. below
 printf '\033[?25l'
 trap 'printf "\033[?25h\033[0m"; [ -n "$PULSER" ] && kill "$PULSER" 2>/dev/null' EXIT
 
-# ---- PAGE: welcome ----
+# ---- PAGE: welcome + color scheme ----
 page_top 0
 cy  "   █     █ ██████ █       █████  ████  █     █ ██████"
 cy  "   █     █ █      █      █      █    █ ██   ██ █"
@@ -86,6 +93,35 @@ cy  "    █   █  ██████ ██████  █████  █�
 say ""
 bold "   ...to the wikiTaTa \"Test Your Agent\" testing suite."
 say ""
+bold "   FIRST - pick a color scheme for these windows"
+say  "   (the classic macOS Terminal themes):"
+say ""
+say "     1  Basic (default)         6  Novel (light)"
+say "     2  Homebrew (green/black)  7  Red Sands"
+say "     3  Pro (white/black)       8  Grass"
+say "     4  Ocean (blue)            9  Silver Aerogel (light)"
+say "     5  Man Page (light)"
+say ""
+bold "   TYPE one number now - or press Return to keep the default."
+THEME=""
+read -rsn1 CH || { printf '\033[?25h\033[0m\n'; exit 1; }
+case "$CH" in
+  1) THEME="Basic";;      2) THEME="Homebrew";;  3) THEME="Pro";;
+  4) THEME="Ocean";;      5) THEME="Man Page";;  6) THEME="Novel";;
+  7) THEME="Red Sands";;  8) THEME="Grass";;     9) THEME="Silver Aerogel";;
+  *) THEME="";;
+esac
+printf "THEME='%s'\n" "$THEME" > "$HOME/tta/theme.conf"
+if [ -n "$THEME" ]; then
+  apply_theme "$THEME"
+  grn "   ✔ color scheme: $THEME (the other windows will match)"
+else
+  grn "   ✔ keeping the default colors"
+fi
+sleep 1
+
+# ---- PAGE: what this wizard does ----
+page_top 0
 say "   This wizard prepares and records your test run, then launches"
 say "   the agent. It moves ONE page at a time, and each page asks for"
 say "   exactly ONE thing: when the pulsing highlighter says PRESS"
@@ -150,5 +186,7 @@ say "   opens: press Command+V, then Return."
 bold "   ▶▶ THAT Return starts the clock. BASIC persona from then on. ◀◀"
 press_return "▶▶ PRESS RETURN - this will LAUNCH THE AGENT (Claude Code) ◀◀"
 printf '\033[?25h\033[0m\033[2J\033[H'
+# Claude Code owns this window from here — hand the suite's ONE pulse to the guide
+echo guide > "$ATTNF"
 "$HOME/tta/tl" claude_launch
 cd "$HOME/challenge/$PROJECT" && exec claude
