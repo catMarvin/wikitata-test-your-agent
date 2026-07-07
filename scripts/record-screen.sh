@@ -18,7 +18,7 @@
 # window switches to the stopped banner with the file listing as proof.
 #
 # Usage: record-screen.sh [output.mov]   (default ~/tta/recording.mov)
-HARNESS_VERSION="1.6.10"
+HARNESS_VERSION="1.6.11"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 OUT="${1:-$HOME/tta/recording.mov}"
 printf '\033]0;wikiTaTa Test Your Agent : screen recording controller\007'

@@ -1,7 +1,7 @@
 #!/bin/bash
 # begin.sh — the guided run wizard. Run this ONE command in a fresh VM
 # Terminal window; from here every step is "[ PRESS RETURN ]".
-HARNESS_VERSION="1.6.10"
+HARNESS_VERSION="1.6.11"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 
 focus_main() {

@@ -10,7 +10,7 @@
 #   3. Shows a formatted step-by-step guide for the run, and stays on screen.
 #
 # Usage: run-guide.sh [project] [run-id]     (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.10"
+HARNESS_VERSION="1.6.11"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
@@ -40,12 +40,10 @@ fold -s -w "$W" <<GUIDE
    (It is the only steering you ever give the agent.)
 
    STEP 1 — LAUNCH THE AGENT
-     Go back to the MAIN Terminal window (the one you ran setup in)
-     and type this, then press Return:
-
-       ~/tta/tl claude_launch; cd ~/challenge/${PROJECT} && claude
-
-     Claude Code starts. No login is needed.
+     Go back to the MAIN window: its wizard launches Claude Code for
+     you at its final "PRESS RETURN". Claude Code starts; no login.
+     (Manual fallback, only if the wizard isn't running:
+       ~/tta/tl claude_launch; cd ~/challenge/${PROJECT} && claude )
 
    STEP 2 — PASTE THE INSTRUCTION        <<< THE CLOCK STARTS HERE
      Click into Claude Code, press  Command+V  (or Edit > Paste),
