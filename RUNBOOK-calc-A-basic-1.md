@@ -23,9 +23,12 @@ chmod +x capture-stills.sh export-run.sh
 tart clone tta-base-a run-calc-A-basic-1
 tart run run-calc-A-basic-1
 ```
-✅ Expect: a VM window opens and boots to a macOS desktop (auto-logs-in as `admin`).
+✅ Expect: the clone takes seconds (it's a copy-on-write, not a real copy), then a VM window opens on the mini's display and boots to a macOS desktop in ~30–60s (auto-logs-in as `admin`). **Note: `tart run` keeps holding this terminal while the VM lives — that's normal.**
 
-**3.** Back in the **mini Terminal** (leave the VM window alone), push the starter + capture script into the guest:
+**3.** Open a **NEW Terminal tab on the mini** (⌘T — the first tab stays attached to the VM) and push the starter + capture script into the guest:
+```bash
+cd ~/tta-runs/staging
+```
 ```bash
 IP=$(tart ip run-calc-A-basic-1)
 scp -o StrictHostKeyChecking=no calculator-starter.zip capture-stills.sh admin@$IP:
