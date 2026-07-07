@@ -4,7 +4,7 @@
 # prompt, installs the run tools (~/tta/*.sh), and docks this window left.
 # Usage:  curl -fsSL <raw>/scripts/vm-setup.sh | bash -s [project] [run-id]
 set -euo pipefail
-HARNESS_VERSION="1.6.26"
+HARNESS_VERSION="1.6.27"
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
 RAW="https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main"

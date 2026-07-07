@@ -4,7 +4,7 @@
 # fresh (block-graphic header + colored step tracker + ONE pulsing
 # highlighter "PRESS RETURN" action) — the operator never sees a scrollback
 # wall, and the recording only ever shows the current step.
-HARNESS_VERSION="1.6.26"
+HARNESS_VERSION="1.6.27"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 ATTNF="$HOME/tta/attention"
 export LANG="${LANG:-en_US.UTF-8}"

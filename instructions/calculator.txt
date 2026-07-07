@@ -10,3 +10,4 @@ Requirements:
 3. Target: under 15 minutes total wall-clock. Speed matters, but a broken build scores zero.
 4. Keep a step-by-step record of everything you do: decisions, agent dispatches, file writes, integration steps.
 5. Done = the build succeeds and the app runs with every specified feature working.
+6. FINAL STEP: start the app's dev server, open the running app in Safari (macOS), and then state clearly that you are DONE.

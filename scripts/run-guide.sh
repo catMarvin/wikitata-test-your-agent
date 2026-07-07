@@ -21,7 +21,7 @@
 # guide_opened_clipboard_loaded into the timing log.
 #
 # Usage: run-guide.sh [project] [run-id]   (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.26"
+HARNESS_VERSION="1.6.27"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
@@ -64,6 +64,27 @@ LAST_BYTES=0
 IDLE_SINCE=0
 AUTOFIRED=0
 IDLE_SECS=0
+# operator can wrap the run with a single 'C' keypress (no Ctrl-C hunt).
+# macOS bash 3.2 has NO fractional `read -t`, so we cannot poll the key inline
+# without wrecking the 0.3s paint cadence. Instead a BACKGROUND reader blocks on
+# the tty and, on 'C', drops a sentinel file the paint loop polls each tick.
+HAVE_TTY=0; [ -r /dev/tty ] && HAVE_TTY=1
+WRAPFLAG="$HOME/tta/.wrap-now"; rm -f "$WRAPFLAG"
+KEYPID=''
+fire_finish() { # $1 = timing-log event tag
+  [ "$AUTOFIRED" -eq 0 ] || return 0
+  AUTOFIRED=1
+  printf '%s\tguest\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" >> "$TLOG"
+  osascript -e 'tell application "Terminal" to do script "~/tta/finish.sh"' >/dev/null 2>&1 || true
+}
+if [ "$HAVE_TTY" -eq 1 ]; then
+  ( stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null || exit 0
+    while IFS= read -r -n 1 ch 2>/dev/null; do
+      case "$ch" in c|C) : > "$WRAPFLAG"; break;; esac
+    done ) </dev/tty &
+  KEYPID=$!
+fi
+trap 'stty sane </dev/tty 2>/dev/null; [ -n "$KEYPID" ] && kill "$KEYPID" 2>/dev/null; printf "\033[?25h\033[0m"; exit 0' INT TERM
 
 # Panel line queue. Attributes:
 #   n normal · b bold · c cyan-bold (structure) · g green-bold (done/live-ok)
@@ -143,9 +164,7 @@ while :; do
         ELAPSED=$(( $(date +%s) - LIVE_AT ))
         if [ "$AUTO_FINISH" = "on" ] && [ "$AUTOFIRED" -eq 0 ] && \
            [ "$ELAPSED" -ge "$MIN_RUN" ] && [ "$IDLE_SECS" -ge "$IDLE_DONE" ]; then
-          AUTOFIRED=1
-          printf '%s\tguest\tguide_autofired_finish\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$TLOG"
-          osascript -e 'tell application "Terminal" to do script "~/tta/finish.sh"' >/dev/null 2>&1 || true
+          fire_finish guide_autofired_finish
         fi
         if ! pgrep -x screencapture >/dev/null 2>&1; then
           STATE=wrapup; echo guide > "$ATTNF"
@@ -203,6 +222,11 @@ while :; do
         QL "  ▶▶ THE RUN IS LIVE - elapsed $ET - your persona: BASIC ◀◀ "
       fi
       L  ""
+      BL "  WHAT IS HAPPENING NOW"
+      L  "    Claude is building the calculator in the MAIN window (left)."
+      L  "    You are the BASIC persona: a non-technical user watching. The"
+      L  "    timer above is the run clock. This guide moves itself along."
+      L  ""
       BL "  YOUR ONLY MOVES WHILE THE RUN IS LIVE:"
       L  "    ▪ Agent asks a question?   Shortest sensible answer."
       L  "    ▪ Permission prompt?       Approve it. (Runs normally"
@@ -211,19 +235,21 @@ while :; do
       L  "    ▪ Agent idle ~60s with no question?  Type exactly:  continue"
       L  "    ▪ Jot down anything you type, with a rough time."
       L  ""
-      L  "  THE RUN ENDS when the agent declares done - or at 45:00."
+      L  "  HOW THE RUN ENDS (no Ctrl-C, ever):"
+      L  "    Claude's LAST step is to start the app and open it in Safari,"
+      L  "    then say it is DONE. When you see that -"
+      QL "  ▶▶ press  C  here  =  \"Claude is done, wrap it up\" ◀◀"
+      L  "     That stops the recording, auto-tests the app in Safari,"
+      L  "     and prints the export command. One key. That is it."
       if [ "$AUTO_FINISH" = "on" ]; then
         RE=$(( IDLE_DONE - IDLE_SECS ))
         if [ "$IDLE_SECS" -ge 20 ] && [ "$RE" -gt 0 ] && [ $(( $(date +%s) - LIVE_AT )) -ge "$MIN_RUN" ]; then
-          QL "  ▶▶ agent looks DONE - auto-finishing in ${RE}s ◀◀"
-          L  "     (or run ~/tta/finish.sh now to wrap immediately)"
+          QL "  ▶▶ agent looks DONE - auto-wrapping in ${RE}s (or press C now) ◀◀"
         else
-          L  "  When the agent goes quiet, THIS guide auto-runs finish for"
-          L  "  you (opens the app, prompts the tests). No Command+N needed."
+          L  ""
+          L  "    (If you miss it, the guide also auto-wraps once the agent"
+          L  "     goes quiet ~${IDLE_DONE}s. Either way: no Command+N, no Ctrl-C.)"
         fi
-      else
-        L  "  When the agent says DONE: open a NEW Terminal (Command+N),"
-        BL "    run  ~/tta/finish.sh"
       fi
       TKB=$(du -sk "$HOME/.claude/projects" 2>/dev/null | awk '{print $1}')
       L  ""
@@ -315,5 +341,14 @@ while :; do
     i=$((i+1))
   done
   [ "$row" -le "$ROWS" ] && printf '\033[%d;1H\033[J' "$row"
+
+  # ---- pace the loop; the bg reader drops WRAPFLAG when 'C' is pressed ----
   sleep 0.3
+  if [ -f "$WRAPFLAG" ]; then
+    rm -f "$WRAPFLAG"
+    if [ "$STATE" = "live" ] && [ "$LIVE_AT" -gt 0 ] && \
+       [ $(( $(date +%s) - LIVE_AT )) -ge "$MIN_RUN" ]; then
+      fire_finish guide_operator_wrap_c
+    fi
+  fi
 done

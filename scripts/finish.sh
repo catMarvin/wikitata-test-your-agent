@@ -12,7 +12,7 @@
 #      (via end-run.sh — ONE wrap path).
 # Run it in a NEW Terminal window (Command+N) — Claude Code owns MAIN.
 # Escape hatch: TTA_AUTO_ACCEPT=off forces the old manual Return-gated battery.
-HARNESS_VERSION="1.6.26"
+HARNESS_VERSION="1.6.27"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 SHOW_SECS="${TTA_SHOW_SECS:-20}"
 tl() { printf '%s\tguest\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" >> "$HOME/tta/run-times.log"; }
@@ -37,7 +37,15 @@ tl agent_done_finish_started
 
 cd "$HOME/challenge/$PROJECT" 2>/dev/null || { echo "  FAIL: no ~/challenge/$PROJECT — report this."; exit 1; }
 URL=""
-if [ -f package.json ] && grep -q '"dev"' package.json; then
+# The agent's FINAL step (per the startup instruction) should already have
+# started the dev server + opened Safari. Reuse a server that's already up
+# before starting our own — avoids a port clash and a duplicate Safari tab.
+for p in 5173 5174 5175 5176 5177 4173 4174 3000 8080; do
+  if curl -fsS -o /dev/null --max-time 1 "http://localhost:$p" 2>/dev/null; then
+    URL="http://localhost:$p"; echo "  the app is already running at $URL (agent started it)"; break
+  fi
+done
+if [ -z "$URL" ] && [ -f package.json ] && grep -q '"dev"' package.json; then
   echo "  starting the dev server (npm run dev)..."
   (npm run dev > "$HOME/tta/devserver.log" 2>&1 &)
   sleep 6

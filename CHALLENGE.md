@@ -24,6 +24,7 @@ Two small apps. Each is deliberately structured as **4 parallel work streams who
 > 3. Target: under 15 minutes total wall-clock. Speed matters, but a broken build scores zero.
 > 4. Keep a step-by-step record of everything you do: decisions, agent dispatches, file writes, integration steps.
 > 5. Done = the build succeeds and the app runs with every specified feature working.
+> 6. FINAL STEP: start the app's dev server, open the running app in Safari (macOS), and then state clearly that you are DONE.
 
 For **Neon Breakout**, replace the project name in line 2; everything else is identical.
 
