@@ -1,5 +1,5 @@
 # Operator Runbook — pilot run `calc-A-basic-1`
-**Version 1.2** · revisions increment 1.1, 1.2, 1.3… (never a 2.x without a protocol change)
+**Version 1.3** · revisions increment 1.1, 1.2, 1.3… (never a 2.x without a protocol change)
 
 **What this is:** you operate the FIRST pilot cell — tier **A** (bare Claude, no MCP), project **Calculator**, persona **BASIC**. Total hands-on time ≈ 5 minutes of setup, then you mostly watch. Hard cap: **45 minutes**, target 15.
 
@@ -12,7 +12,7 @@
 
 ## Setup (on the mini)
 
-**1.** SSH into the mini from your Mac (`ssh m4`) — the VM's display will come to you over VNC in step 2, so you don't need the mini's own desktop.
+**1.** Get a terminal on the mini either way: Screen Share into its desktop and open Terminal there, OR `ssh m4` from your Mac (step 2 covers both display paths).
 
 **2.** In that SSH session, stage the run:
 ```bash
@@ -22,9 +22,13 @@ curl -fsSLO https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent
 curl -fsSLO https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/export-run.sh
 chmod +x capture-stills.sh export-run.sh
 tart clone tta-base-a run-calc-A-basic-1
-tart run run-calc-A-basic-1 --vnc
+tart run run-calc-A-basic-1          # ← if you're SCREEN-SHARING into the mini's desktop
 ```
-✅ Expect, in order: the clone command returns (copy-on-write, not a real copy — disk-usage growth afterward is normal VM boot writes), then a `vnc://…` URL prints. **Open that URL from YOUR Mac** (paste into Safari, or Finder ⌘K) — the VM's screen appears in a window and lands on a logged-in desktop (`admin`). **`tart run` keeps holding this terminal while the VM lives — that's normal.** Health checks any time, from another tab: `tart list` (state=running) and `tart ip run-calc-A-basic-1` (prints an IP once booted).
+Pick the display path that matches how you're connected:
+- **Screen Sharing into the mini's desktop (Terminal there):** plain `tart run` — the VM window opens right in your Screen Sharing view. If no window appears, check Mission Control / the Dock (it may land on another Space).
+- **Plain ssh (no mini desktop):** use `tart run run-calc-A-basic-1 --vnc` instead — it prints a `vnc://…` URL; open it from your own Mac (Safari address bar or Finder ⌘K).
+
+✅ Expect, in order: the clone command returns (copy-on-write, not a real copy — disk-usage growth afterward is normal VM boot writes), then the VM's screen appears (window or VNC) and lands on a logged-in desktop (`admin`). **`tart run` keeps holding this terminal while the VM lives — that's normal.** Health checks any time, from another tab: `tart list` (state=running) and `tart ip run-calc-A-basic-1` (prints an IP once booted).
 
 **3.** Open a **second SSH tab** (⌘T, `ssh m4` — the first tab stays attached to the VM) and push the starter + capture script into the guest:
 ```bash
@@ -91,4 +95,4 @@ open ~/tta-runs/calc-A-basic-1/index.html
 **Something broke?** Don't improvise — note where, leave everything as-is, and report. A voided pilot that teaches us something IS the pilot doing its job.
 
 ---
-*Revisions: 1.0 initial · 1.1 step-3 opens a new tab (`tart run` holds its terminal) · 1.2 ssh-first flow with `--vnc` display + state-based expectations + health checks.*
+*Revisions: 1.0 initial · 1.1 step-3 opens a new tab (`tart run` holds its terminal) · 1.2 ssh-first flow with `--vnc` + state-based expectations + health checks · 1.3 display path split: screen-sharing → plain tart run (window), ssh-only → --vnc.*
