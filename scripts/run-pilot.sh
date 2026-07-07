@@ -89,7 +89,7 @@ if [ "$VM_STATE" = "running" ]; then
   ok "'${VM}' is already running"
 elif [ "$(launchctl managername 2>/dev/null)" = "Aqua" ]; then
   nohup tart run "${VM}" >/dev/null 2>&1 &
-  ok "boot started in the background (this terminal stays free). If no window appears, check Mission Control — it may open on another Space."
+  ok "boot started in the background (this terminal stays free). To locate the VM window at any time: press Cmd-Tab and select 'tart', or open Mission Control to see every open window."
 else
   printf '\n\n'
   echo "── ACTION NEEDED ────────────────────────────────────────────────────────"
@@ -134,11 +134,11 @@ cat <<EOF
 ══════════════════════════════════════════════════════════════════════════════
  READY: '${VM}' is booted and staged. The rest happens INSIDE THE VM.
 
- 0. FIND THE VM WINDOW: it is a separate window on this desktop named
-    '${VM}' showing a whole macOS desktop. Not seeing it? Open
-    Mission Control (F3, or swipe up with 3 fingers) — it may be on
-    another Space. CLICK INSIDE that window: from then on your keyboard
-    and mouse control the VM (the Mac-in-a-window), not this machine.
+ 0. FIND THE VM WINDOW: a separate window named '${VM}'
+    showing a whole macOS desktop. To locate it: press Cmd-Tab and
+    select 'tart', or open Mission Control (F3) to see every open
+    window. CLICK INSIDE that window: from then on your keyboard and
+    mouse control the VM (the Mac-in-a-window), not this machine.
 
  1. Inside the VM: press Cmd-Space, type Terminal, press Return (this
     opens the VM's OWN Terminal). Paste this ONE block into it

@@ -26,7 +26,7 @@
 curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/run-pilot.sh | bash
 ```
 
-The script narrates exactly what it is doing at every step (live progress bar): it checks the VM host, downloads the starter + capture scripts, clones the golden image `tta-base-a` into a fresh disposable VM `run-calc-A-basic-1`, boots it **in the background** (your terminal stays free; the VM window opens on the desktop — if you don't see it, check Mission Control, it may land on another Space), waits for it to come up, and pushes the starter into it.
+The script narrates exactly what it is doing at every step (live progress bar): it checks the VM host, downloads the starter + capture scripts, clones the golden image `tta-base-a` into a fresh disposable VM `run-calc-A-basic-1`, boots it **in the background** (your terminal stays free; the VM window opens on the desktop — locate it any time with Cmd-Tab → 'tart', or Mission Control), waits for it to come up, and pushes the starter into it.
 
 ✅ Expect: seven ✓ steps ending in a boxed **READY** checklist. That checklist is steps 2–4 below, printed with everything filled in.
 
