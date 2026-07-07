@@ -1,5 +1,5 @@
 #!/bin/bash
-# export-run.sh — run ON THE VM HOST (the mini) after a challenge run ends.
+# export-run.sh — run ON THE VM HOST after a challenge run ends.
 # Pulls the full capture bundle out of the guest into ~/tta-runs/<RUN_ID>/ and
 # drops the viewer page next to it, then you can open index.html to watch.
 # Usage: ./export-run.sh <vm-name> <run-id>     e.g. ./export-run.sh run-calc-A-basic-1 calc-A-basic-1

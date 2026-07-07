@@ -16,6 +16,12 @@ cd wikitata-test-your-agent
 
 Unzip a starter somewhere fresh, point your agent at it, and paste the startup instruction from [CHALLENGE.md](CHALLENGE.md) verbatim. Timer starts at the paste. Target: **15 minutes**, all four lanes shipped, clean integration, working app.
 
+## Platform notes
+
+**The challenge is platform-agnostic:** the starters are plain SvelteKit repos — run them on any machine (macOS, Linux, Windows) that runs Claude Code and Node. Your agent's token usage is essentially machine-independent; only local build/install seconds vary with hardware.
+
+**The instrumented harness is not:** our reference harness (`scripts/run-pilot.sh`, `RUNBOOK-*.md`) runs each attempt inside a fresh **macOS guest VM** via [Tart](https://tart.run), which requires an **Apple Silicon Mac** as the VM host. That's what gives reproducible, contamination-free capture bundles (transcripts, recording, stills, git history). Equivalent harnesses for Intel/Linux/Windows hosts (UTM/QEMU/Hyper-V) are welcome — the capture-bundle spec is VM-tool-independent.
+
 ## What's in a starter
 
 A minimal, buildable SvelteKit skeleton (`npm install && npm run build` passes as-is), the full `PROJECT-BRIEF.md` (features, the 4 lanes, the collision map, dependency-ordered milestones), and a committed git baseline — so the git history of what your agent does IS the coordination evidence.
