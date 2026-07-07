@@ -53,17 +53,22 @@
   <video id="video" controls preload="metadata"></video>
 </div>
 
+<script src="manifest.js"></script>
 <script>
 (async function () {
   let frames = [], idx = 0, playing = false, timer = null, interval = 5.0;
   const $ = (id) => document.getElementById(id);
 
-  try {
-    const m = await (await fetch('manifest.json')).json();
+  // Safari blocks fetch() over file:// — manifest.js (a plain script tag,
+  // written by export-run.sh) is the primary source; fetch is the fallback
+  // for http-served bundles.
+  let m = window.TTA_MANIFEST || null;
+  if (!m) { try { m = await (await fetch('manifest.json')).json(); } catch { /* empty state */ } }
+  if (m) {
     frames = m.stills || [];
     if (m.run_id) $('runname').textContent = 'Run: ' + m.run_id;
     if (m.video) { $('videosec').hidden = false; $('video').src = m.video; }
-  } catch { /* fall through to empty state */ }
+  }
 
   if (!frames.length) { $('noframes').hidden = false; $('frame').style.display = 'none'; return; }
   $('scrub').max = frames.length - 1;
