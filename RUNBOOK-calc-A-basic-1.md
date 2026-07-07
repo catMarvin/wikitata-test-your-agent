@@ -78,9 +78,9 @@ The boxed checklist from Step 2 printed a paste-block. Copy that whole block (al
 
 The stills camera from Step 4 is automatic; the video recording starts with one more paste. *(Required for instrumented runs — it is a mandatory evidence witness. Casual challengers outside the harness: recommended, not required — see CAPTURE.md.)*
 
-1. In the VM's Terminal, paste this **one line** and press **Return** — it opens a **dedicated recording window** that records the **entire screen** (no QuickTime, no clicking, nothing to aim):
+1. In the VM's Terminal, paste this **one line** and press **Return** — it opens a **dedicated recording window** with a live big-digit elapsed clock, recording the **entire screen** (no QuickTime, no clicking, nothing to aim):
    ```bash
-   osascript -e 'tell application "Terminal" to do script "clear; printf \"\\n  >>> SCREEN RECORDING IN PROGRESS <<<\\n\\n  This window IS the indicator: while it shows this text,\\n  the screen is being recorded. Leave it open.\\n\\n  TO STOP: click this window, press Ctrl-C.\\n\\n\"; rm -f ~/tta/recording.mov; screencapture -v ~/tta/recording.mov"'
+   curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"'
    ```
 2. **First time only:** macOS may ask Screen Recording permission for Terminal — click **Allow** (System Settings opens: switch **Terminal** on, enter the VM password `admin`, let Terminal quit & reopen), then paste the line again.
 3. **Verify it, don't trust it** — back in your main Terminal window, paste:
@@ -88,7 +88,7 @@ The stills camera from Step 4 is automatic; the video recording starts with one 
    pgrep -x screencapture >/dev/null && echo ">>> YES: SCREEN IS BEING RECORDED <<<" || echo ">>> NO: NOT RECORDING — redo the recording step <<<"
    ```
 
-✅ **You should now see:** a second Terminal window showing `>>> SCREEN RECORDING IN PROGRESS <<<`, and the verify line answering `YES`.
+✅ **You should now see:** a second Terminal window showing `>>> SCREEN RECORDING IN PROGRESS <<<` with a **big ASCII clock counting up every second**, and the verify line answering `YES`. Clock ticking = recording; clock gone (`NO LONGER BEING RECORDED`) = not.
 🚫 **Do not proceed to Part 3 until the verify line says YES.** A run without the recording is missing a required piece of evidence.
 📺 The window stays visible the entire run — while it shows the banner, you're recording; when it drops back to a prompt, you're not. Run the verify line any time you're unsure.
 

@@ -105,9 +105,9 @@ cat <<EOF
 
  2. Start the FULL-SCREEN video recording (REQUIRED evidence for
     instrumented runs). This ONE line opens a dedicated recording window
-    — while its banner shows, you are recording:
+    with a live big-digit elapsed clock — clock ticking = recording:
 
-      osascript -e 'tell application "Terminal" to do script "clear; printf \"\\n  >>> SCREEN RECORDING IN PROGRESS <<<\\n\\n  Leave this window open. TO STOP: click here, press Ctrl-C.\\n\\n\"; rm -f ~/tta/recording.mov; screencapture -v ~/tta/recording.mov"'
+      curl -fsSL ${RAW}/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"'
 
     FIRST TIME ONLY: approve the Screen Recording permission (password
     admin), let Terminal reopen, paste again. Then VERIFY from your main
