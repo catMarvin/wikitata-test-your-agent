@@ -26,7 +26,7 @@
 curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/run-pilot.sh | bash
 ```
 
-The script narrates exactly what it is doing at every step (live progress bar): it checks the VM host, downloads the starter + capture scripts, clones the golden image `tta-base-a` into a fresh disposable VM `run-calc-A-basic-1`, boots it **in the background** (your terminal stays free; the VM window opens on the desktop — locate it any time with Cmd-Tab → 'tart', or Mission Control), waits for it to come up, and pushes the starter into it.
+The script narrates exactly what it is doing at every step (live progress bar): it checks the VM host, downloads the starter + capture scripts, clones the golden image `tta-base-a` into a fresh disposable VM `run-calc-A-basic-1`, has you boot it **in a second Terminal tab** (`tart run` must stay attached to a tab to show the VM window — a backgrounded boot runs invisibly; the boot tab stays occupied for the VM's life, which is normal), then waits for it to come up, and pushes the starter into it.
 
 ✅ Expect: seven ✓ steps ending in a boxed **READY** checklist. That checklist is steps 2–4 below, printed with everything filled in.
 
@@ -95,7 +95,8 @@ curl -fsSLO https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent
 curl -fsSLO https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/export-run.sh
 chmod +x capture-stills.sh export-run.sh
 tart clone tta-base-a run-calc-A-basic-1
-nohup tart run run-calc-A-basic-1 >/dev/null 2>&1 &     # backgrounded — the terminal stays free
+# in a NEW Terminal tab (Cmd-T) — the VM window opens from it and the tab stays attached:
+tart run run-calc-A-basic-1
 IP=$(tart ip run-calc-A-basic-1)                        # retry until it prints an IP (boot takes a bit)
 scp -o StrictHostKeyChecking=no calculator-starter.zip capture-stills.sh admin@$IP:
 ```

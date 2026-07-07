@@ -5,8 +5,8 @@
 #   1. Checks the VM host has what it needs (tart + the golden image).
 #   2. Downloads the starter + capture scripts into a staging folder.
 #   3. Clones the golden image into a fresh, disposable run VM.
-#   4. Boots the run VM in the background (its window opens on the VM host's
-#      desktop — watch it there, or through macOS Screen Sharing).
+#   4. Has you boot the run VM in a second Terminal tab — the VM's window
+#      opens from that tab (a backgrounded boot produces NO window).
 #   5. Waits for the VM to get an IP and accept SSH.
 #   6. Pushes the starter + stills script into the VM.
 #   7. Prints the short operator checklist for the run itself.
@@ -88,8 +88,21 @@ VM_STATE=$(tart list 2>/dev/null | awk -v vm="${VM}" '$2==vm {print $NF}')
 if [ "$VM_STATE" = "running" ]; then
   ok "'${VM}' is already running"
 elif [ "$(launchctl managername 2>/dev/null)" = "Aqua" ]; then
-  nohup tart run "${VM}" >/dev/null 2>&1 &
-  ok "boot started in the background (this terminal stays free). To locate the VM window at any time: press Cmd-Tab and select 'tart', or open Mission Control to see every open window."
+  printf '\n\n'
+  echo "── ACTION: BOOT THE VM IN A SECOND TERMINAL TAB ────────────────────────"
+  echo "The VM must run attached to its own tab — a backgrounded boot produces"
+  echo "no visible VM window (verified on the pilot host)."
+  echo
+  echo "  1. Press Cmd-T (new Terminal tab) and run:"
+  echo
+  echo "       tart run ${VM}"
+  echo
+  echo "     The VM window opens from that tab; the tab stays attached to it"
+  echo "     for the VM's whole life — that is normal. Leave it be."
+  echo "  2. Return to THIS tab and press Return here to continue."
+  echo "─────────────────────────────────────────────────────────────────────────"
+  read -r < /dev/tty || die "no interactive terminal to wait on"
+  ok "continuing — verifying the VM is up"
 else
   printf '\n\n'
   echo "── ACTION NEEDED ────────────────────────────────────────────────────────"
