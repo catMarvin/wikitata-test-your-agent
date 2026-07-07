@@ -80,7 +80,7 @@ The stills camera from Step 4 is automatic; the video recording starts with one 
 
 1. In the VM's Terminal, paste this **one line** and press **Return** — it opens a **dedicated recording window** with a live big-digit elapsed clock, recording the **entire screen** (no QuickTime, no clicking, nothing to aim):
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"'
+   curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, sh * 11 div 20, sw, sh}' >/dev/null 2>&1 || true
    ```
 2. **First time only:** macOS may ask Screen Recording permission for Terminal — click **Allow** (System Settings opens: switch **Terminal** on, enter the VM password `admin`, let Terminal quit & reopen), then paste the line again.
 3. **Verify it, don't trust it** — back in your main Terminal window, paste:
@@ -101,10 +101,10 @@ The stills camera from Step 4 is automatic; the video recording starts with one 
 In the VM's Terminal, paste this **one line** and press **Return** — it opens a guide window that puts the official startup instruction **directly onto the VM's clipboard** and shows your next moves:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/run-guide.sh -o ~/tta/run-guide.sh && chmod +x ~/tta/run-guide.sh && osascript -e 'tell application "Terminal" to do script "~/tta/run-guide.sh calculator calc-A-basic-1"'
+curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/run-guide.sh -o ~/tta/run-guide.sh && chmod +x ~/tta/run-guide.sh && osascript -e 'tell application "Terminal" to do script "~/tta/run-guide.sh calculator calc-A-basic-1"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, 25, sw, sh * 11 div 20}' >/dev/null 2>&1 || true
 ```
 
-✅ **You should now see:** a guide window titled "YOUR NEXT MOVES", confirming the instruction is on the clipboard.
+✅ **You should now see:** a guide window titled "YOUR NEXT MOVES" docked to the **top-right**, confirming the instruction is on the clipboard. The three windows now tile themselves: main Terminal left, guide top-right, recording clock bottom-right. *(First time, macOS may ask to let Terminal control Finder — that's only for window positioning; Allow or Deny, everything works either way.)*
 
 ### Step 7. Follow the guide: launch, then ⌘V — the clock starts at the paste
 

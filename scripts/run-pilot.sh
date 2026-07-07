@@ -102,13 +102,14 @@ cat <<EOF
     unzip -q ~/${PROJECT}-starter.zip -d ~/challenge && tl starter_unpacked && \\
     curl -fsSL ${RAW}/scripts/capture-stills.sh -o ~/tta/capture-stills.sh && chmod +x ~/tta/capture-stills.sh && \\
     { RUN_ID=${RUN_ID} INTERVAL=30 ~/tta/capture-stills.sh > ~/tta/stills.log 2>&1 & } && \\
+    { osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set bounds of front window to {0, 25, sw * 3 div 5, sh}' >/dev/null 2>&1 || true; } && \\
     tl stills_started && echo READY
 
  2. Start the FULL-SCREEN video recording (REQUIRED evidence for
     instrumented runs). This ONE line opens a dedicated recording window
     with a live big-digit elapsed clock — clock ticking = recording:
 
-      curl -fsSL ${RAW}/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"'
+      curl -fsSL ${RAW}/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, sh * 11 div 20, sw, sh}' >/dev/null 2>&1 || true
 
     FIRST TIME ONLY: approve the Screen Recording permission (password
     admin), let Terminal reopen, paste again. Then VERIFY from your main
@@ -119,7 +120,7 @@ cat <<EOF
  3. Open the RUN GUIDE window — it loads the startup instruction onto
     the clipboard and walks you through launch + paste + persona rules:
 
-      curl -fsSL ${RAW}/scripts/run-guide.sh -o ~/tta/run-guide.sh && chmod +x ~/tta/run-guide.sh && osascript -e 'tell application "Terminal" to do script "~/tta/run-guide.sh ${PROJECT} ${RUN_ID}"'
+      curl -fsSL ${RAW}/scripts/run-guide.sh -o ~/tta/run-guide.sh && chmod +x ~/tta/run-guide.sh && osascript -e 'tell application "Terminal" to do script "~/tta/run-guide.sh ${PROJECT} ${RUN_ID}"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, 25, sw, sh * 11 div 20}' >/dev/null 2>&1 || true
 
     Follow its STEP 1 (launch claude) and STEP 2 (Command+V the
     instruction). The run clock starts at that paste.
