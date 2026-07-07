@@ -10,6 +10,8 @@
 #   3. Shows a formatted step-by-step guide for the run, and stays on screen.
 #
 # Usage: run-guide.sh [project] [run-id]     (defaults: calculator, calc-A-basic-1)
+HARNESS_VERSION="1.6"
+SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
 RAW="https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main"
@@ -64,6 +66,7 @@ cat <<GUIDE
 
  =====================================================================
    Leave this window open for reference during the run.
+   harness v${HARNESS_VERSION} (${SELF_SHA}) · run-id ${RUN_ID}
  =====================================================================
 
 GUIDE

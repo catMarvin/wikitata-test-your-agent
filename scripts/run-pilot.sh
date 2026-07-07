@@ -26,6 +26,7 @@
 #   ./run-pilot.sh <project> <golden-image> <run-id>
 set -euo pipefail
 
+HARNESS_VERSION="1.6"
 PROJECT="${1:-calculator}"
 GOLDEN="${2:-tta-base-a}"
 RUN_ID="${3:-calc-A-basic-1}"
@@ -62,7 +63,7 @@ step 1 "Checking the VM host (tart installed, golden image '${GOLDEN}' present).
 tlog "script_start project=${PROJECT} golden=${GOLDEN}"
 command -v tart >/dev/null || die "tart is not installed on this VM host. Install: brew install cirruslabs/cli/tart  (requires an Apple Silicon Mac)"
 tart list 2>/dev/null | awk '{print $2}' | grep -qx "${GOLDEN}" || die "golden image '${GOLDEN}' not found — build it first (runbook: golden-image section)"
-ok "VM host ready (tart $(tart --version 2>/dev/null || echo '?'), golden '${GOLDEN}' present)"
+ok "VM host ready (tart $(tart --version 2>/dev/null || echo '?'), golden '${GOLDEN}' present) — harness v${HARNESS_VERSION}"
 
 # ---- 2. stage host-side tooling ---------------------------------------------
 step 2 "Staging the export script into ${STAGE}..."

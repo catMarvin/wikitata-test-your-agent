@@ -18,6 +18,8 @@
 # window switches to the stopped banner with the file listing as proof.
 #
 # Usage: record-screen.sh [output.mov]   (default ~/tta/recording.mov)
+HARNESS_VERSION="1.6"
+SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 OUT="${1:-$HOME/tta/recording.mov}"
 mkdir -p "$(dirname "$OUT")"
 rm -f "$OUT"
@@ -59,6 +61,7 @@ START=$(date +%s)
       LINES_OUT=( \
         "" \
         "  >>> SCREEN RECORDING IN PROGRESS <<<" \
+        "  harness v$HARNESS_VERSION ($SELF_SHA)" \
         "" \
         "  RECORDING — ELAPSED TIME SHOWN HERE:" \
         "" \
@@ -71,6 +74,7 @@ START=$(date +%s)
       LINES_OUT=( \
         "" \
         " >>> RECORDING <<<   elapsed $T" \
+        " harness v$HARNESS_VERSION ($SELF_SHA)" \
         "" \
         " When testing is complete, stop this" \
         " recording: click here, press Ctrl-C." )
@@ -93,7 +97,7 @@ kill "$TIMER" 2>/dev/null
 wait "$TIMER" 2>/dev/null
 
 clear
-printf '\n  >>> NO LONGER BEING RECORDED <<<\n\n'
+printf '\n  >>> NO LONGER BEING RECORDED <<<\n  harness v%s (%s)\n\n' "$HARNESS_VERSION" "$SELF_SHA"
 if [ -s "$OUT" ]; then
   ls -l "$OUT"
   printf '\n  Recording saved. You can close this window.\n'
