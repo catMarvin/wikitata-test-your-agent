@@ -1,0 +1,12 @@
+You are starting a new project. The complete specification is in PROJECT-BRIEF.md in this repository.
+
+Build the **Pocket Scientific Calculator** exactly as specified, as 4 parallel work streams (lanes A–D in the brief).
+
+Before any code: design the implementation of the entire project — including how you will execute and coordinate the 4 work streams — **optimized for the coordination capabilities available to you.** Then execute that design.
+
+Requirements:
+1. All 4 lanes' scope must ship. All modules must integrate cleanly — no merge conflicts, no duplicate or competing components, no broken imports.
+2. Design the app's visual appearance **from scratch**. No reference designs exist; visual quality will be judged.
+3. Target: under 15 minutes total wall-clock. Speed matters, but a broken build scores zero.
+4. Keep a step-by-step record of everything you do: decisions, agent dispatches, file writes, integration steps.
+5. Done = the build succeeds and the app runs with every specified feature working.

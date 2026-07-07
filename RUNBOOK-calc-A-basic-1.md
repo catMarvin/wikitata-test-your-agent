@@ -96,19 +96,21 @@ The stills camera from Step 4 is automatic; the video recording starts with one 
 
 ## PART 3 — The run itself
 
-### Step 6. Launch the agent
+### Step 6. Open the run-guide window (it loads your clipboard)
 
-In the VM's Terminal, paste and press **Return**:
+In the VM's Terminal, paste this **one line** and press **Return** — it opens a guide window that puts the official startup instruction **directly onto the VM's clipboard** and shows your next moves:
 
 ```bash
-tl claude_launch; cd ~/challenge/calculator && claude
+curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/run-guide.sh -o ~/tta/run-guide.sh && chmod +x ~/tta/run-guide.sh && osascript -e 'tell application "Terminal" to do script "~/tta/run-guide.sh calculator calc-A-basic-1"'
 ```
 
-✅ **You should now see:** Claude Code start up, with no login prompt (the VM is pre-authenticated). *(`tl claude_launch` stamps the timing log; if it prints `command not found: tl`, ignore it and continue — it means the setup block ran without the logger.)*
+✅ **You should now see:** a guide window titled "YOUR NEXT MOVES", confirming the instruction is on the clipboard.
 
-### Step 7. Paste the startup instruction — the clock starts HERE
+### Step 7. Follow the guide: launch, then ⌘V — the clock starts at the paste
 
-Copy the block below **exactly, as one single message**, paste it into Claude Code, press **Return**. This is the only steering you ever give.
+Per the guide's STEP 1, in the **main** VM Terminal: `tl claude_launch; cd ~/challenge/calculator && claude` → Claude Code starts, no login. Then STEP 2: click into Claude Code, press **⌘V** (or Edit → Paste), press **Return**.
+
+The pasted text is exactly this — shown here for reference only; you never need to hand-copy it:
 
 > You are starting a new project. The complete specification is in PROJECT-BRIEF.md in this repository.
 >

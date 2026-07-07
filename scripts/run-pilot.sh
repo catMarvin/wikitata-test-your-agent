@@ -116,12 +116,13 @@ cat <<EOF
 
       pgrep -x screencapture >/dev/null && echo YES-RECORDING || echo NOT-RECORDING
 
- 3. In the VM's Terminal, launch the agent (this stamps the clock-start):
+ 3. Open the RUN GUIDE window — it loads the startup instruction onto
+    the clipboard and walks you through launch + paste + persona rules:
 
-    tl claude_launch; cd ~/challenge/${PROJECT} && claude
+      curl -fsSL ${RAW}/scripts/run-guide.sh -o ~/tta/run-guide.sh && chmod +x ~/tta/run-guide.sh && osascript -e 'tell application "Terminal" to do script "~/tta/run-guide.sh ${PROJECT} ${RUN_ID}"'
 
-    Paste the startup instruction from the runbook VERBATIM.
-    The run clock starts at that paste. Persona rules apply from here.
+    Follow its STEP 1 (launch claude) and STEP 2 (Command+V the
+    instruction). The run clock starts at that paste.
 
  AFTER THE RUN (agent done, or 45-min cap): in the VM's main Terminal:
     tl run_end 2>/dev/null; pkill -INT -x screencapture; sleep 3; ls -l ~/tta/recording.mov
