@@ -32,7 +32,7 @@ GOLDEN="${2:-tta-base-a}"
 RUN_ID="${3:-calc-A-basic-1}"
 RESUME=0
 [ "${1:-}" = "--resume" ] && { RESUME=1; PROJECT="${2:-calculator}"; GOLDEN="${3:-tta-base-a}"; RUN_ID="${4:-calc-A-basic-1}"; }
-VM="run-$RUN_ID"
+VM="run-${RUN_ID}"
 STAGE="$HOME/tta-runs/staging"
 RAW="https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main"
 REL="https://github.com/catMarvin/wikitata-test-your-agent/releases/latest/download"
@@ -59,36 +59,36 @@ ok() { [ "$IS_TTY" = 1 ] && printf '\n\033[2K  ✓ %s\n' "$1" || printf '  ✓ %
 die() { printf '\n✗ %s\n' "$1" >&2; exit 1; }
 
 # ---- 1. preflight -------------------------------------------------------------
-step 1 "Checking the VM host (tart installed, golden image '$GOLDEN' present)…"
+step 1 "Checking the VM host (tart installed, golden image '${GOLDEN}' present)..."
 command -v tart >/dev/null || die "tart is not installed on this VM host. Install: brew install cirruslabs/cli/tart  (requires an Apple Silicon Mac)"
-tart list 2>/dev/null | awk '{print $2}' | grep -qx "$GOLDEN" || die "golden image '$GOLDEN' not found — build it first (runbook: golden-image section)"
-ok "VM host ready (tart $(tart --version 2>/dev/null || echo '?'), golden '$GOLDEN' present)"
+tart list 2>/dev/null | awk '{print $2}' | grep -qx "${GOLDEN}" || die "golden image '${GOLDEN}' not found — build it first (runbook: golden-image section)"
+ok "VM host ready (tart $(tart --version 2>/dev/null || echo '?'), golden '${GOLDEN}' present)"
 
 # ---- 2. stage downloads --------------------------------------------------------
-step 2 "Downloading the $PROJECT starter + capture scripts into $STAGE…"
-mkdir -p "$STAGE"; cd "$STAGE"
-curl -fsSLO "$REL/$PROJECT-starter.zip"
+step 2 "Downloading the ${PROJECT} starter + capture scripts into ${STAGE}..."
+mkdir -p "${STAGE}"; cd "${STAGE}"
+curl -fsSLO "$REL/${PROJECT}-starter.zip"
 curl -fsSLO "$RAW/scripts/capture-stills.sh"
 curl -fsSLO "$RAW/scripts/export-run.sh"
 chmod +x capture-stills.sh export-run.sh
-ok "staged: $PROJECT-starter.zip, capture-stills.sh, export-run.sh"
+ok "staged: ${PROJECT}-starter.zip, capture-stills.sh, export-run.sh"
 
 # ---- 3. clone golden → run VM ---------------------------------------------------
-step 3 "Creating a fresh disposable run VM '$VM' from '$GOLDEN' (copy-on-write clone)…"
-if tart list 2>/dev/null | awk '{print $2}' | grep -qx "$VM"; then
-  ok "run VM '$VM' already exists — reusing it (delete with 'tart delete $VM' for a truly fresh run)"
+step 3 "Creating a fresh disposable run VM '${VM}' from '${GOLDEN}' (copy-on-write clone)..."
+if tart list 2>/dev/null | awk '{print $2}' | grep -qx "${VM}"; then
+  ok "run VM '${VM}' already exists — reusing it (delete with 'tart delete ${VM}' for a truly fresh run)"
 else
-  tart clone "$GOLDEN" "$VM"
-  ok "cloned '$GOLDEN' → '$VM' (instant — real disk writes happen as the VM boots)"
+  tart clone "${GOLDEN}" "${VM}"
+  ok "cloned '${GOLDEN}' → '${VM}' (instant — real disk writes happen as the VM boots)"
 fi
 
 # ---- 4. boot (needs the VM host's desktop) --------------------------------------
-step 4 "Booting '$VM' — its window opens on the VM host's desktop…"
-VM_STATE=$(tart list 2>/dev/null | awk -v vm="$VM" '$2==vm {print $NF}')
+step 4 "Booting '${VM}' — its window opens on the VM host's desktop..."
+VM_STATE=$(tart list 2>/dev/null | awk -v vm="${VM}" '$2==vm {print $NF}')
 if [ "$VM_STATE" = "running" ]; then
-  ok "'$VM' is already running"
+  ok "'${VM}' is already running"
 elif [ "$(launchctl managername 2>/dev/null)" = "Aqua" ]; then
-  nohup tart run "$VM" >/dev/null 2>&1 &
+  nohup tart run "${VM}" >/dev/null 2>&1 &
   ok "boot started in the background (this terminal stays free). If no window appears, check Mission Control — it may open on another Space."
 else
   printf '\n\n'
@@ -97,60 +97,60 @@ else
   echo "window on. Open a Terminal on the VM host's DESKTOP (directly or via"
   echo "macOS Screen Sharing) and run:"
   echo
-  echo "    nohup tart run $VM >/dev/null 2>&1 &"
+  echo "    nohup tart run ${VM} >/dev/null 2>&1 &"
   echo
   echo "Then, from any terminal, continue with:"
   echo
-  echo "    $STAGE/run-pilot.sh --resume $PROJECT $GOLDEN $RUN_ID"
+  echo "    ${STAGE}/run-pilot.sh --resume ${PROJECT} ${GOLDEN} ${RUN_ID}"
   echo "─────────────────────────────────────────────────────────────────────────"
   # keep a copy of this script in staging so --resume works from anywhere
-  curl -fsSL "$RAW/scripts/run-pilot.sh" -o "$STAGE/run-pilot.sh" 2>/dev/null && chmod +x "$STAGE/run-pilot.sh" || true
+  curl -fsSL "$RAW/scripts/run-pilot.sh" -o "${STAGE}/run-pilot.sh" 2>/dev/null && chmod +x "${STAGE}/run-pilot.sh" || true
   exit 0
 fi
 
 # ---- 5. wait for IP + SSH --------------------------------------------------------
-step 5 "Waiting for '$VM' to finish booting (IP address, then SSH)…"
+step 5 "Waiting for '${VM}' to finish booting (IP address, then SSH)..."
 IP=""
-for _ in $(seq 1 60); do IP=$(tart ip "$VM" 2>/dev/null) && [ -n "$IP" ] && break; sleep 3; done
-[ -n "$IP" ] || die "no IP after 3 minutes — is the VM window up and booted to the desktop?"
+for _ in $(seq 1 60); do IP=$(tart ip "${VM}" 2>/dev/null) && [ -n "${IP}" ] && break; sleep 3; done
+[ -n "${IP}" ] || die "no IP after 3 minutes — is the VM window up and booted to the desktop?"
 for _ in $(seq 1 40); do
-  ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=3 -o BatchMode=yes "admin@$IP" true 2>/dev/null && break
+  ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=3 -o BatchMode=yes "admin@${IP}" true 2>/dev/null && break
   sleep 3
 done
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=3 -o BatchMode=yes "admin@$IP" true 2>/dev/null \
-  || die "VM has IP $IP but SSH isn't accepting the host's key. (Guest user is 'admin' — the golden image should carry the host's key; see runbook.)"
-ok "VM is up at $IP and accepting SSH"
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=3 -o BatchMode=yes "admin@${IP}" true 2>/dev/null \
+  || die "VM has IP ${IP} but SSH isn't accepting the host's key. (Guest user is 'admin' — the golden image should carry the host's key; see runbook.)"
+ok "VM is up at ${IP} and accepting SSH"
 
 # ---- 6. push the starter + stills script into the guest ---------------------------
-step 6 "Copying the starter and stills script into the VM…"
-scp -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$PROJECT-starter.zip" capture-stills.sh "admin@$IP:" \
+step 6 "Copying the starter and stills script into the VM..."
+scp -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "${PROJECT}-starter.zip" capture-stills.sh "admin@${IP}:" \
   || die "copy failed"
-ok "copied $PROJECT-starter.zip + capture-stills.sh into the VM's home folder"
+ok "copied ${PROJECT}-starter.zip + capture-stills.sh into the VM's home folder"
 
 # ---- 7. operator handoff -----------------------------------------------------------
 step 7 "Setup complete — the rest happens inside the VM window."
 printf '\n\n'
 cat <<EOF
 ══════════════════════════════════════════════════════════════════════════════
- READY: '$VM' is booted and staged. Do the rest IN THE VM WINDOW
+ READY: '${VM}' is booted and staged. Do the rest IN THE VM WINDOW
  (on the VM host's desktop / your Screen Sharing view):
 
  1. Open Terminal inside the VM and paste this ONE block
     (unpacks the challenge + starts the 30s stills loop):
 
-    unzip -q ~/$PROJECT-starter.zip -d ~/challenge && mkdir -p ~/tta && \\
+    unzip -q ~/${PROJECT}-starter.zip -d ~/challenge && mkdir -p ~/tta && \\
     mv ~/capture-stills.sh ~/tta/ && chmod +x ~/tta/capture-stills.sh && \\
-    RUN_ID=$RUN_ID INTERVAL=30 ~/tta/capture-stills.sh > ~/tta/stills.log 2>&1 &
+    RUN_ID=${RUN_ID} INTERVAL=30 ~/tta/capture-stills.sh > ~/tta/stills.log 2>&1 &
 
  2. QuickTime Player → File → New Screen Recording → record the ENTIRE screen.
     (At the end: stop, save as recording.mov to the Desktop.)
 
- 3. In the VM Terminal:   cd ~/challenge/$PROJECT && claude
+ 3. In the VM Terminal:   cd ~/challenge/${PROJECT} && claude
     Paste the startup instruction from the runbook VERBATIM.
     ⏱  The clock starts at that paste. Persona rules apply from here.
 
  AFTER THE RUN (agent done, or 45-min cap):
     stop + save the recording, then back on the VM host:
-       cd $STAGE && ./export-run.sh $VM $RUN_ID
+       cd ${STAGE} && ./export-run.sh ${VM} ${RUN_ID}
 ══════════════════════════════════════════════════════════════════════════════
 EOF
