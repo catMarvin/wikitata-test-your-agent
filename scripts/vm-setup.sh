@@ -4,7 +4,7 @@
 # prompt, installs the run tools (~/tta/*.sh), and docks this window left.
 # Usage:  curl -fsSL <raw>/scripts/vm-setup.sh | bash -s [project] [run-id]
 set -euo pipefail
-HARNESS_VERSION="1.6.6"
+HARNESS_VERSION="1.6.7"
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
 RAW="https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main"
@@ -31,6 +31,9 @@ for s in capture-stills.sh record-screen.sh run-guide.sh start-recording.sh open
 done
 curl -fsSL "$RAW/instructions/${PROJECT}.txt" -o "$HOME/tta/startup-instruction.txt"
 chmod +x "$HOME"/tta/*.sh
+# tl = timing-log stamper as a REAL script (works from any window/shell)
+printf '#!/bin/bash\nprintf "%%s\\tguest\\t%%s\\n" "$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)" "$*" >> "$HOME/tta/run-times.log"\n' > "$HOME/tta/tl"
+chmod +x "$HOME/tta/tl"
 
 say "starting the stills camera (1 photo / 30s)..."
 { RUN_ID="$RUN_ID" INTERVAL=30 "$HOME/tta/capture-stills.sh" > "$HOME/tta/stills.log" 2>&1 & }

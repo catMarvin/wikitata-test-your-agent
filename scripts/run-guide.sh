@@ -10,7 +10,7 @@
 #   3. Shows a formatted step-by-step guide for the run, and stays on screen.
 #
 # Usage: run-guide.sh [project] [run-id]     (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.6"
+HARNESS_VERSION="1.6.7"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
@@ -42,7 +42,7 @@ cat <<GUIDE
      Go back to the MAIN Terminal window (the one you ran setup in)
      and type this, then press Return:
 
-       tl claude_launch; cd ~/challenge/${PROJECT} && claude
+       ~/tta/tl claude_launch; cd ~/challenge/${PROJECT} && claude
 
      Claude Code starts. No login is needed.
 
