@@ -1,54 +1,108 @@
 # Operator Runbook — pilot run `calc-A-basic-1`
-**Version 1.4** · revisions increment 1.1, 1.2, 1.3… (never a 2.x without a protocol change)
+**Version 1.5** · revisions increment 1.1, 1.2, 1.3… (never a 2.x without a protocol change)
 
-**What this is:** you operate the FIRST pilot cell — tier **A** (bare Claude, no MCP), project **Calculator**, persona **BASIC**. Total hands-on time ≈ 5 minutes of setup, then you mostly watch. Hard cap: **45 minutes**, target 15.
+You are about to operate one instrumented challenge run: tier **A** (bare Claude, no MCP), project **Calculator**, persona **BASIC**. Hands-on setup is a few minutes; then you mostly watch. The run itself ends when the agent finishes or at **45 minutes**, whichever comes first.
 
-## Platform — read this first
-
-- **The guest VM is a macOS VM**, and the harness uses [Tart](https://tart.run), which only runs on an **Apple Silicon Mac** ("the VM host" below — any M-series Mac with ≥16 GB free for the guest; more is better).
-- **The challenge itself is platform-agnostic** — anyone can run the starter + startup instruction on any machine with Claude Code (see [CHALLENGE.md](CHALLENGE.md)). The VM harness in this runbook exists for *controlled, reproducible, instrumented* runs: fresh-snapshot isolation, in-guest recording, and a complete capture bundle.
-- Running instrumented runs on Intel Macs, Linux, or Windows needs a different VM harness (UTM / QEMU / Hyper-V equivalents). Not provided yet — contributions welcome; the capture-bundle spec is VM-tool-independent.
-
-**Seeing the VM's screen:** the VM window opens on the **VM host's own desktop**. Work at that desktop directly, or connect to it with **macOS Screen Sharing** — either way you're looking at the VM host's desktop and the VM window on it. Plain SSH is fine for every *command* in this runbook, but SSH alone cannot show you the VM window, and the run requires you to see and use it.
-
-**Your persona (BASIC) — the three rules while the agent runs:**
-1. Answer any question the agent asks with the shortest sensible answer. Approve permission prompts (that's normal operation, not steering).
-2. NEVER suggest features, tools, designs, or approaches. Never say "try X".
-3. Only speak unprompted if the agent has been idle with no question for ~60 seconds — then say exactly: `continue`.
+This guide assumes nothing. Every step tells you what to do, exactly how to do it, and what you should see before moving on. If what you see doesn't match, stop and check the Troubleshooting section at the bottom — don't improvise.
 
 ---
 
-## Setup — one command
+## Words used in this guide
 
-**1.** Open a Terminal on the VM host's desktop (directly or via Screen Sharing) and run:
+| Word | Means |
+|---|---|
+| **VM host** | The physical Apple Silicon Mac the run happens on. |
+| **VM** | A complete second Mac running *inside a window* on the VM host ("virtual machine"). |
+| **Inside the VM** | You clicked into the VM's window, so your keyboard and mouse now control that inner Mac — not the real one. |
+| **Terminal** | The app where you type commands. The VM host has one; the VM has its *own separate one*. This guide always says which. |
+
+## What you need before starting
+
+1. **An Apple Silicon Mac as the VM host** (any M-series). The guest VM is macOS; the harness tool ([Tart](https://tart.run)) does not run on Intel Macs, Linux, or Windows — see [README → Platform notes](README.md).
+2. **The golden image `tta-base-a` already built on that Mac.** (One-time build; if `tart list` doesn't show it, do the golden-image build first — not this document.)
+3. **A way to see the VM host's screen:** sit at it, or connect with macOS Screen Sharing. Either way you are looking at its desktop. *Plain SSH is not enough* — the VM opens as a window on the desktop, and you must see and use that window.
+
+## Your persona: BASIC — the rules while the agent runs
+
+You are playing "a regular user who pasted an instruction and waits." Three rules plus a notebook, no exceptions:
+
+1. If the agent asks a question, answer with the **shortest sensible answer**. Approving permission prompts is fine — that's normal use, not steering.
+2. **Never** suggest a feature, tool, design, or approach. Never say "try X". Never point out a problem.
+3. Speak unprompted **only** if the agent has sat idle, with no question pending, for about 60 seconds — then type exactly: `continue`
+4. Keep a scrap note: anything you type, and roughly when. That note is the operator log and ships with the results.
+
+---
+
+## PART 1 — Start everything (on the VM host)
+
+### Step 1. Open a Terminal on the VM host's desktop
+
+At the VM host (or in your Screen Sharing view of it): click the desktop, press **⌘-space** (hold the command key, tap the space bar), type `Terminal`, press **Return**.
+
+✅ **You should now see:** a window with a text prompt ending in `$` or `%`, waiting for you to type.
+
+### Step 2. Run the launcher
+
+Copy this whole line, paste it at the prompt, press **Return**:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/run-pilot.sh | bash
 ```
 
-The script narrates exactly what it is doing at every step (live progress bar): it checks the VM host, stages the export script, clones the golden image `tta-base-a` into a fresh disposable VM `run-calc-A-basic-1`, prints the in-VM checklist, and then **becomes the VM** — its last act launches the VM in the same terminal, so the VM window just opens. No second terminal, no tabs; the terminal stays attached to the VM for its whole life (your prompt returns when the VM shuts down). The guest downloads its own starter, so nothing runs on the host after boot. Every step is timestamped to the run's timing log.
+The launcher narrates itself: it checks the VM host, stages the export tool, creates a fresh disposable VM, prints the checklist you'll use in Part 2, and then **turns this terminal into the VM** — a new window opens containing an entire second Mac.
 
-✅ Expect: four OK steps, a boxed checklist (it is steps 2–4 below with everything filled in), then the VM window opening.
+✅ **You should now see:** four `OK` lines, a boxed checklist (a filled-in copy of Part 2 below — leave it on screen), and then a **new window** with a macOS desktop booting inside it. Your terminal stops accepting input: it is now attached to the VM for the whole run. That is normal — you never need this terminal again until Part 4, and your prompt comes back when the VM shuts down.
 
-*(Ran it over plain SSH instead? It stages everything, then tells you the single `tart run` command to issue from a desktop Terminal and how to `--resume`. Prefer to see every raw command? Appendix A has the full manual sequence.)*
+⏳ First boot can take a minute or two. Wait until the inner Mac shows a normal desktop (menu bar, dock, wallpaper).
 
 ---
 
-## The run (inside the VM window)
+## PART 2 — Prepare the inside of the VM
 
-**2.** Click inside the VM window (your keyboard now controls the guest). Open **Terminal** there (⌘-Space, type Terminal) and paste the one-block setup the checklist printed — it downloads and unpacks the challenge to `~/challenge`, starts the 30-second stills loop, and starts the guest timing log (`tl` events → `~/tta/run-times.log`).
+⚠️ **First: click once inside the VM's window.** From that click on, everything you type goes to the inner Mac. (To get your mouse and keyboard back to the real Mac later, just click outside the window.)
 
-✅ Expect: the block ends by printing `READY`.
+### Step 3. Open the VM's own Terminal
 
-**3.** Still in the VM: **QuickTime Player** → File → **New Screen Recording** → record the **entire screen**. Leave it recording. (When you stop it at the end, save as `recording.mov` to the Desktop.)
+Inside the VM: press **⌘-space**, type `Terminal`, press **Return**.
 
-**4.** In the VM Terminal (the `tl` stamp records launch time in the timing log):
+✅ **You should now see:** a second Terminal — this one belongs to the inner Mac. Everything in Part 2 happens here.
+
+### Step 4. Set up the challenge + start the automatic stills camera
+
+The boxed checklist from Step 2 printed a paste-block. Copy that whole block (all lines together) into the VM's Terminal and press **Return**. It downloads the challenge, unpacks it, and starts a camera that snaps the screen every 30 seconds — plus a timing log.
+
+✅ **You should now see:** the word `READY` printed, then the prompt back.
+❌ If you see `command not found` or an error mentioning `curl` or `unzip`: stop, note the exact text, and report it.
+
+### Step 5. Start the screen recording — MANUAL. This is the step people miss.
+
+The stills camera from Step 4 is automatic. The **full video recording is not** — nothing records the screen unless you start it now, by hand:
+
+1. Inside the VM: **⌘-space**, type `QuickTime`, press **Return**.
+2. In the menu bar at the top of the *VM's* screen: **File → New Screen Recording**.
+3. A recording toolbar appears. Choose to record the **entire screen**, and click **Record** (if macOS asks you to click the screen to start — click once anywhere).
+4. **Walk away from QuickTime.** It must keep recording untouched until the run is over.
+
+✅ **You should now see:** a small stop symbol (⏹) in the VM's menu bar — that is how you know it is recording.
+🚫 **Do not proceed to Part 3 until that symbol is there.** A run without the recording is missing a required piece of evidence.
+
+---
+
+## PART 3 — The run itself
+
+### Step 6. Launch the agent
+
+In the VM's Terminal, paste and press **Return**:
+
 ```bash
 tl claude_launch; cd ~/challenge/calculator && claude
 ```
-✅ Expect: Claude Code starts. (No login prompt — the golden image is pre-authed.)
 
-**5.** Paste this **exactly**, as one message — this is the only steering you give. **The clock starts at this paste.**
+✅ **You should now see:** Claude Code start up, with no login prompt (the VM is pre-authenticated). *(`tl claude_launch` stamps the timing log; if it prints `command not found: tl`, ignore it and continue — it means the setup block ran without the logger.)*
+
+### Step 7. Paste the startup instruction — the clock starts HERE
+
+Copy the block below **exactly, as one single message**, paste it into Claude Code, press **Return**. This is the only steering you ever give.
 
 > You are starting a new project. The complete specification is in PROJECT-BRIEF.md in this repository.
 >
@@ -63,55 +117,51 @@ tl claude_launch; cd ~/challenge/calculator && claude
 > 4. Keep a step-by-step record of everything you do: decisions, agent dispatches, file writes, integration steps.
 > 5. Done = the build succeeds and the app runs with every specified feature working.
 
-**6.** Follow the BASIC persona rules (top of this page). Jot a one-line note (with rough time) for anything you type — that's the operator log.
+⏱ **The moment you press Return, the run has started.** Persona rules (top of this page) govern everything you do from now on. Note the time.
 
-**7.** The run ends when the agent declares done, **or at 45 minutes** — whichever comes first. Then in the VM Terminal type `tl run_end` (stamps the end time), stop the QuickTime recording, save as `recording.mov` **to the Desktop**, and quit QuickTime.
+### Step 8. Watch. The run ends two ways
+
+- The agent declares it is **done**, or
+- **45 minutes** pass since the paste — then you stop it regardless.
 
 ---
 
-## Export & watch
+## PART 4 — Stop, save, export
 
-**8.** In a Terminal on the VM host:
+### Step 9. Stamp the end + stop the recording (inside the VM)
+
+1. In the VM's Terminal: type `tl run_end` and press **Return** (timing stamp; `command not found` is safe to ignore).
+2. Click the ⏹ stop symbol in the VM's menu bar.
+3. QuickTime shows the video: **File → Save**, name it exactly `recording.mov`, save it to the VM's **Desktop**.
+4. Quit QuickTime.
+
+### Step 10. Export the results bundle (on the VM host)
+
+Click **outside** the VM window (you're back on the real Mac). Open a **new** Terminal (⌘-space → `Terminal` — the old one is still attached to the VM; leave it). Paste:
+
 ```bash
 cd ~/tta-runs/staging && ./export-run.sh run-calc-A-basic-1 calc-A-basic-1
 open ~/tta-runs/calc-A-basic-1/index.html
 ```
-✅ Expect: the bundle lists (repo, transcripts, stills, recording), and the **Run Viewer** opens — a flip-book of the stills with a [−  5.0 s/frame  +] speed control, arrow keys to step, and the full video below.
 
-**9.** Report where the bundle is (`~/tta-runs/calc-A-basic-1` on the VM host) — token accounting and the run-report skeleton are generated from it with `scripts/analyze-run.mjs <bundle-dir>`. Don't delete the VM; leave it stopped for inspection (`tart stop run-calc-A-basic-1` if it's still running).
+✅ **You should now see:** a list of what was pulled out of the VM (repo, transcripts, stills, recording…), then the **Run Viewer** page opening — a flip-book of the stills with the video below it.
 
-**Something broke?** Don't improvise — note where, leave everything as-is, and report. A voided pilot that teaches us something IS the pilot doing its job.
+### Step 11. Hand off
 
----
-
-## Appendix A — manual setup (what run-pilot.sh does, as raw commands)
-
-All on the VM host; the `tart run` line must be issued from a Terminal on its desktop.
-
-```bash
-mkdir -p ~/tta-runs/staging && cd ~/tta-runs/staging
-curl -fsSLO https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/export-run.sh
-chmod +x export-run.sh
-tart clone tta-base-a run-calc-A-basic-1
-tart run run-calc-A-basic-1     # the VM window opens; this terminal stays attached (normal)
-IP=$(tart ip run-calc-A-basic-1)                        # retry until it prints an IP (boot takes a bit)
-scp -o StrictHostKeyChecking=no calculator-starter.zip capture-stills.sh admin@$IP:
-```
-
-Then continue at step 2 ("The run"). In-VM one-block setup for step 2 (downloads the starter + stills script, starts the timing log):
-
-```bash
-mkdir -p ~/tta ~/challenge && cd ~ && \
-tl(){ printf '%s\tguest\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" >> ~/tta/run-times.log; } && \
-tl guest_setup_start && \
-curl -fsSLO https://github.com/catMarvin/wikitata-test-your-agent/releases/latest/download/calculator-starter.zip && \
-unzip -q ~/calculator-starter.zip -d ~/challenge && tl starter_unpacked && \
-curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/capture-stills.sh -o ~/tta/capture-stills.sh && chmod +x ~/tta/capture-stills.sh && \
-{ RUN_ID=calc-A-basic-1 INTERVAL=30 ~/tta/capture-stills.sh > ~/tta/stills.log 2>&1 & } && \
-tl stills_started && echo READY
-```
-
-Health checks any time: `tart list` (state=running) · `tart ip run-calc-A-basic-1` (prints an IP once booted).
+Report where the bundle is (`~/tta-runs/calc-A-basic-1` on the VM host). Analysis, token accounting, the time tally, and the run-report card are generated from it (`node scripts/analyze-run.mjs <bundle-dir>`). **Do not delete the VM** — leave it stopped for inspection.
 
 ---
-*Revisions: 1.0 initial · 1.1 step-3 opens a new tab (`tart run` holds its terminal) · 1.2 ssh-first flow + state-based expectations + health checks · 1.3 display-path split · 1.4 generic operator rewrite: platform section (macOS guest VM on an Apple Silicon host — stated explicitly), the VM-host desktop / Screen Sharing as the ONLY display path (remote-display alternative removed), one-command `run-pilot.sh` setup with backgrounded boot, host-specific names and paths removed.*
+
+## Troubleshooting
+
+| What you see | What it means / what to do |
+|---|---|
+| Launcher ends with "plain SSH session" text instead of a VM window | You ran it over SSH. Do Step 1 at the VM host's desktop (or via Screen Sharing) and run the printed `tart run` command there. |
+| No VM window after Step 2 | In a new VM-host Terminal: `tart list` — if the VM says `running` but there's no window, report it; if `stopped`, run `tart run run-calc-A-basic-1` from a desktop Terminal. |
+| Typing goes to the wrong Mac | Click once inside the VM window to type into the VM; click outside it to type on the real Mac. |
+| `golden image not found` | The one-time golden-image build hasn't been done on this VM host. |
+| Agent sits idle >60s with no question | Persona rule 3: type exactly `continue`. |
+| **Anything else** | Stop. Note the exact text and the step number. Leave everything as-is and report. A stopped run that teaches us something is the pilot doing its job. |
+
+---
+*Revisions: 1.0 initial · 1.1 tart-run-holds-terminal fix · 1.2 state-based expectations + health checks · 1.3 display-path split · 1.4 generic operator rewrite (platform section, no host specifics) · 1.5 novice-fidelity rewrite: defined terms, per-step ✅ verification, manual-recording warning, zero-tab launcher flow, troubleshooting table.*
