@@ -18,7 +18,7 @@
 # window switches to the stopped banner with the file listing as proof.
 #
 # Usage: record-screen.sh [output.mov]   (default ~/tta/recording.mov)
-HARNESS_VERSION="1.6"
+HARNESS_VERSION="1.6.1"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 OUT="${1:-$HOME/tta/recording.mov}"
 mkdir -p "$(dirname "$OUT")"
@@ -50,7 +50,7 @@ START=$(date +%s)
     T="$(printf %02d $((S/60))):$(printf %02d $((S%60)))"
 
     LINES_OUT=()
-    if [ "$COLS" -ge 42 ] && [ "$ROWS" -ge 15 ]; then
+    if [ "$COLS" -ge 42 ] && [ "$ROWS" -ge 16 ]; then
       r1=""; r2=""; r3=""; r4=""; r5=""
       i=0
       while [ $i -lt ${#T} ]; do
@@ -80,11 +80,16 @@ START=$(date +%s)
         " recording: click here, press Ctrl-C." )
     fi
 
-    printf '\033[H'
+    # absolute-position every line, NO newlines: scrolling is impossible at
+    # any window size (15 lines + newlines in a 15-row window scrolled one
+    # line per tick — the v1.6 soup). Lines past the window bottom are skipped.
+    row=1
     for line in "${LINES_OUT[@]}"; do
-      printf '\033[2K%.*s\n' "$COLS" "$line"
+      [ "$row" -gt "$ROWS" ] && break
+      printf '\033[%d;1H\033[2K%.*s' "$row" "$COLS" "$line"
+      row=$((row+1))
     done
-    printf '\033[J'
+    [ "$row" -le "$ROWS" ] && printf '\033[%d;1H\033[J' "$row"
     sleep 1
   done
 ) &
