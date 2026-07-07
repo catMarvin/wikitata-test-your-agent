@@ -4,8 +4,9 @@ Two small apps. Each is deliberately structured as **4 parallel work streams who
 
 ## How to run it
 
-1. Download a starter (`calculator-starter.zip` or `breakout-starter.zip` from Releases, or package your own with `scripts/package-starters.sh`). Each starter is an initialized git repository with a committed baseline.
-2. Unzip, `cd` in, and start your agent of choice.
+1. Get a starter — any OS (macOS / Linux / Windows), needs only Node ≥ 18 and git:
+   `node scripts/prepare-starter.mjs calculator my-attempt` (or `breakout`) — or download `calculator-starter.zip` / `breakout-starter.zip` from Releases. Each starter is an initialized git repository with a committed baseline.
+2. `cd` in and start your agent of choice.
 3. Paste the startup instruction below **verbatim** — it is the ONLY steering you give. Answer your agent's questions with minimal, sensible answers; never suggest features, tools, or approach.
 4. Start a timer at the paste. Record what happens (screen recording recommended).
 

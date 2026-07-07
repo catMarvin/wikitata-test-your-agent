@@ -8,17 +8,21 @@ Without coordination infrastructure, agents facing this either go **serial** (sl
 
 ## Quick start
 
+Works the same on macOS, Linux, and Windows — all you need is Node ≥ 18 and git:
+
 ```bash
 git clone https://github.com/catMarvin/wikitata-test-your-agent.git
 cd wikitata-test-your-agent
-./scripts/package-starters.sh        # builds dist/calculator-starter.zip + dist/breakout-starter.zip
+node scripts/prepare-starter.mjs calculator my-attempt   # or: breakout
 ```
 
-Unzip a starter somewhere fresh, point your agent at it, and paste the startup instruction from [CHALLENGE.md](CHALLENGE.md) verbatim. Timer starts at the paste. Target: **15 minutes**, all four lanes shipped, clean integration, working app.
+That gives you a fresh starter directory with a committed git baseline (identical to the release zips — grab `calculator-starter.zip` / `breakout-starter.zip` from Releases if you prefer a download). Point your agent at it and paste the startup instruction from [CHALLENGE.md](CHALLENGE.md) verbatim. Timer starts at the paste. Target: **15 minutes**, all four lanes shipped, clean integration, working app.
+
+Want your run to be comparable or publishable? Capture it per [CAPTURE.md](CAPTURE.md) (platform-agnostic bundle spec) and self-analyze with `node scripts/analyze-run.mjs <bundle>` — token totals, cost, and a run report, on any OS.
 
 ## Platform notes
 
-**The challenge is platform-agnostic:** the starters are plain SvelteKit repos — run them on any machine (macOS, Linux, Windows) that runs Claude Code and Node. Your agent's token usage is essentially machine-independent; only local build/install seconds vary with hardware.
+**The challenge is platform-agnostic:** the starters are plain SvelteKit repos, and every user-facing script is pure Node (`prepare-starter.mjs`, `analyze-run.mjs`) — one implementation, runs identically on macOS, Linux, and Windows. Your agent's token usage is essentially machine-independent; only local build/install seconds vary with hardware. Capture-bundle spec: [CAPTURE.md](CAPTURE.md).
 
 **The instrumented harness is not:** our reference harness (`scripts/run-pilot.sh`, `RUNBOOK-*.md`) runs each attempt inside a fresh **macOS guest VM** via [Tart](https://tart.run), which requires an **Apple Silicon Mac** as the VM host. That's what gives reproducible, contamination-free capture bundles (transcripts, recording, stills, git history). Equivalent harnesses for Intel/Linux/Windows hosts (UTM/QEMU/Hyper-V) are welcome — the capture-bundle spec is VM-tool-independent.
 
