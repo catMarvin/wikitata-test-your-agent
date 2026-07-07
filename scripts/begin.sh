@@ -4,7 +4,7 @@
 # fresh (block-graphic header + colored step tracker + ONE pulsing
 # highlighter "PRESS RETURN" action) — the operator never sees a scrollback
 # wall, and the recording only ever shows the current step.
-HARNESS_VERSION="1.6.17"
+HARNESS_VERSION="1.6.18"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 ATTNF="$HOME/tta/attention"
 export LANG="${LANG:-en_US.UTF-8}"
@@ -92,6 +92,21 @@ press_return() { # $1 pulses (~1s highlighter <-> bold) until Return; $2.. below
 printf '\033[?25l'
 trap 'printf "\033[?25h\033[0m"; [ -n "$PULSER" ] && kill "$PULSER" 2>/dev/null' EXIT
 
+# ---- import our custom recording profile (built for the video: dark,
+# every ANSI slot above the contrast floor, incl. the dim grey Claude Code
+# uses). Import = open the .terminal file once (spawns a stray window we
+# close), then it is selectable like any stock profile.
+ensure_recording_profile() {
+  [ -f "$HOME/tta/wikiTaTa-Recording.terminal" ] || return 1
+  if ! osascript -e 'tell application "Terminal" to get name of every settings set' 2>/dev/null | grep -q "wikiTaTa Recording"; then
+    open "$HOME/tta/wikiTaTa-Recording.terminal"
+    sleep 1.2
+    osascript -e 'tell application "Terminal" to close front window' >/dev/null 2>&1 || true
+    focus_main
+  fi
+  return 0
+}
+
 # ---- PAGE: welcome + color scheme (repainted WHOLE after every try —
 # applying a profile can reflow the window, so single-row patching is unsafe:
 # it left duplicate status lines on Todd's screen)
@@ -105,13 +120,15 @@ theme_page() { # $1 = status line ("" = none yet)
   say ""
   bold "   ...to the wikiTaTa \"Test Your Agent\" testing suite."
   say ""
-  bold "   FIRST - pick a color scheme for these windows"
-  say  "   (the classic macOS Terminal themes):"
+  bold "   FIRST - pick a color scheme for these windows."
+  say  "   You are already looking at our recommendation:"
   say ""
-  say "     1  Basic (default)         6  Novel (light)"
-  say "     2  Homebrew (green/black)  7  Red Sands"
-  say "     3  Pro (white/black)       8  Grass"
-  say "     4  Ocean (blue)            9  Silver Aerogel (light)"
+  grn "     0  wikiTaTa Recording  << RECOMMENDED - built for the video"
+  say ""
+  say "     1  Basic (light)          6  Novel (light)"
+  say "     2  Homebrew (green/black) 7  Red Sands"
+  say "     3  Pro (white/black)      8  Grass"
+  say "     4  Ocean (blue)           9  Silver Aerogel (light)"
   say "     5  Man Page (light)"
   say ""
   bold "   TYPE a number to TRY a theme - it applies INSTANTLY so you can"
@@ -121,10 +138,15 @@ theme_page() { # $1 = status line ("" = none yet)
   [ -n "$1" ] && grn "$1"
 }
 THEME=""
+if ensure_recording_profile; then
+  THEME="wikiTaTa Recording"
+  apply_theme "$THEME"
+fi
 theme_page ""
 while :; do
   read -rsn1 CH || { printf '\033[?25h\033[0m\n'; exit 1; }
   case "$CH" in
+    0) T2="wikiTaTa Recording";;
     1) T2="Basic";;      2) T2="Homebrew";;  3) T2="Pro";;
     4) T2="Ocean";;      5) T2="Man Page";;  6) T2="Novel";;
     7) T2="Red Sands";;  8) T2="Grass";;     9) T2="Silver Aerogel";;
@@ -217,5 +239,12 @@ press_return "▶▶ PRESS RETURN - this will LAUNCH THE AGENT (Claude Code) ◀
 printf '\033[?25h\033[0m\033[2J\033[H'
 # Claude Code owns this window from here — hand the suite's ONE pulse to the guide
 echo guide > "$ATTNF"
+# sync Claude Code's OWN theme to the terminal background so its text is
+# never dark-theme grey on a light window (or vice versa) in the recording
+case "$THEME" in
+  "wikiTaTa Recording"|Homebrew|Pro|Ocean|"Red Sands"|Grass) CLAUDE_THEME=dark;;
+  *) CLAUDE_THEME=light;;
+esac
+claude config set -g theme "$CLAUDE_THEME" >/dev/null 2>&1 || true
 "$HOME/tta/tl" claude_launch
 cd "$HOME/challenge/$PROJECT" && exec claude

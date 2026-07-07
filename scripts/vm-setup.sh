@@ -4,7 +4,7 @@
 # prompt, installs the run tools (~/tta/*.sh), and docks this window left.
 # Usage:  curl -fsSL <raw>/scripts/vm-setup.sh | bash -s [project] [run-id]
 set -euo pipefail
-HARNESS_VERSION="1.6.17"
+HARNESS_VERSION="1.6.18"
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
 RAW="https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main"
@@ -26,7 +26,7 @@ unzip -q -o "$HOME/${PROJECT}-starter.zip" -d "$HOME/challenge"
 tl starter_unpacked
 
 say "installing run tools into ~/tta ..."
-for s in capture-stills.sh record-screen.sh run-guide.sh start-recording.sh open-guide.sh end-run.sh begin.sh; do
+for s in capture-stills.sh record-screen.sh run-guide.sh start-recording.sh open-guide.sh end-run.sh begin.sh wikiTaTa-Recording.terminal; do
   curl -fsSL "$RAW/scripts/$s" -o "$HOME/tta/$s"
 done
 curl -fsSL "$RAW/instructions/${PROJECT}.txt" -o "$HOME/tta/startup-instruction.txt"
