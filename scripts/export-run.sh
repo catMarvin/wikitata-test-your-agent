@@ -17,6 +17,7 @@ $SCP "admin@$IP:~/.claude/projects"    "$OUT/transcripts"     2>/dev/null || ech
 $SCP "admin@$IP:~/tta/stills"          "$OUT/stills"          2>/dev/null || echo "  (no stills)"
 $SCP "admin@$IP:~/tta/manifest.json"   "$OUT/manifest.json"   2>/dev/null || echo "  (no manifest)"
 $SCP "admin@$IP:~/tta/turn_stats.jsonl" "$OUT/turn_stats.jsonl" 2>/dev/null || echo "  (no turn stats — normal for tier A)"
+$SCP "admin@$IP:~/tta/run-times.log"   "$OUT/guest-run-times.log" 2>/dev/null || echo "  (no guest timing log)"
 $SCP "admin@$IP:~/Desktop/recording.mov" "$OUT/recording.mov" 2>/dev/null || \
 $SCP "admin@$IP:~/tta/recording.mov"     "$OUT/recording.mov" 2>/dev/null || echo "  (no recording.mov found — check where QuickTime saved it)"
 $SSH "admin@$IP" "claude mcp list 2>&1 | grep -vE '_(KEY|SECRET|TOKEN)='" > "$OUT/tier-surface-proof.txt" 2>/dev/null || true

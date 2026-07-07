@@ -26,9 +26,9 @@
 curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/run-pilot.sh | bash
 ```
 
-The script narrates exactly what it is doing at every step (live progress bar): it checks the VM host, downloads the starter + capture scripts, clones the golden image `tta-base-a` into a fresh disposable VM `run-calc-A-basic-1`, has you boot it **in a second Terminal tab** (`tart run` must stay attached to a tab to show the VM window — a backgrounded boot runs invisibly; the boot tab stays occupied for the VM's life, which is normal), then waits for it to come up, and pushes the starter into it.
+The script narrates exactly what it is doing at every step (live progress bar): it checks the VM host, stages the export script, clones the golden image `tta-base-a` into a fresh disposable VM `run-calc-A-basic-1`, prints the in-VM checklist, and then **becomes the VM** — its last act launches the VM in the same terminal, so the VM window just opens. No second terminal, no tabs; the terminal stays attached to the VM for its whole life (your prompt returns when the VM shuts down). The guest downloads its own starter, so nothing runs on the host after boot. Every step is timestamped to the run's timing log.
 
-✅ Expect: seven ✓ steps ending in a boxed **READY** checklist. That checklist is steps 2–4 below, printed with everything filled in.
+✅ Expect: four OK steps, a boxed checklist (it is steps 2–4 below with everything filled in), then the VM window opening.
 
 *(Ran it over plain SSH instead? It stages everything, then tells you the single `tart run` command to issue from a desktop Terminal and how to `--resume`. Prefer to see every raw command? Appendix A has the full manual sequence.)*
 
@@ -36,15 +36,15 @@ The script narrates exactly what it is doing at every step (live progress bar): 
 
 ## The run (inside the VM window)
 
-**2.** In the VM window: open **Terminal** (⌘-Space, type Terminal) and paste the one-block setup the READY checklist printed (unpacks the challenge to `~/challenge` and starts the 30-second stills loop).
+**2.** Click inside the VM window (your keyboard now controls the guest). Open **Terminal** there (⌘-Space, type Terminal) and paste the one-block setup the checklist printed — it downloads and unpacks the challenge to `~/challenge`, starts the 30-second stills loop, and starts the guest timing log (`tl` events → `~/tta/run-times.log`).
 
-✅ Expect: silence — the stills loop is snapping a PNG every 30s in the background.
+✅ Expect: the block ends by printing `READY`.
 
 **3.** Still in the VM: **QuickTime Player** → File → **New Screen Recording** → record the **entire screen**. Leave it recording. (When you stop it at the end, save as `recording.mov` to the Desktop.)
 
-**4.** In the VM Terminal:
+**4.** In the VM Terminal (the `tl` stamp records launch time in the timing log):
 ```bash
-cd ~/challenge/calculator && claude
+tl claude_launch; cd ~/challenge/calculator && claude
 ```
 ✅ Expect: Claude Code starts. (No login prompt — the golden image is pre-authed.)
 
@@ -65,7 +65,7 @@ cd ~/challenge/calculator && claude
 
 **6.** Follow the BASIC persona rules (top of this page). Jot a one-line note (with rough time) for anything you type — that's the operator log.
 
-**7.** The run ends when the agent declares done, **or at 45 minutes** — whichever comes first. Then in the VM: stop the QuickTime recording, save as `recording.mov` **to the Desktop**, and quit QuickTime.
+**7.** The run ends when the agent declares done, **or at 45 minutes** — whichever comes first. Then in the VM Terminal type `tl run_end` (stamps the end time), stop the QuickTime recording, save as `recording.mov` **to the Desktop**, and quit QuickTime.
 
 ---
 
@@ -90,23 +90,25 @@ All on the VM host; the `tart run` line must be issued from a Terminal on its de
 
 ```bash
 mkdir -p ~/tta-runs/staging && cd ~/tta-runs/staging
-curl -fsSLO https://github.com/catMarvin/wikitata-test-your-agent/releases/latest/download/calculator-starter.zip
-curl -fsSLO https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/capture-stills.sh
 curl -fsSLO https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/export-run.sh
-chmod +x capture-stills.sh export-run.sh
+chmod +x export-run.sh
 tart clone tta-base-a run-calc-A-basic-1
-# in a NEW Terminal tab (Cmd-T) — the VM window opens from it and the tab stays attached:
-tart run run-calc-A-basic-1
+tart run run-calc-A-basic-1     # the VM window opens; this terminal stays attached (normal)
 IP=$(tart ip run-calc-A-basic-1)                        # retry until it prints an IP (boot takes a bit)
 scp -o StrictHostKeyChecking=no calculator-starter.zip capture-stills.sh admin@$IP:
 ```
 
-Then continue at step 2 ("The run"). In-VM one-block setup for step 2:
+Then continue at step 2 ("The run"). In-VM one-block setup for step 2 (downloads the starter + stills script, starts the timing log):
 
 ```bash
-unzip -q ~/calculator-starter.zip -d ~/challenge && mkdir -p ~/tta && \
-mv ~/capture-stills.sh ~/tta/ && chmod +x ~/tta/capture-stills.sh && \
-RUN_ID=calc-A-basic-1 INTERVAL=30 ~/tta/capture-stills.sh > ~/tta/stills.log 2>&1 &
+mkdir -p ~/tta ~/challenge && cd ~ && \
+tl(){ printf '%s\tguest\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" >> ~/tta/run-times.log; } && \
+tl guest_setup_start && \
+curl -fsSLO https://github.com/catMarvin/wikitata-test-your-agent/releases/latest/download/calculator-starter.zip && \
+unzip -q ~/calculator-starter.zip -d ~/challenge && tl starter_unpacked && \
+curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/capture-stills.sh -o ~/tta/capture-stills.sh && chmod +x ~/tta/capture-stills.sh && \
+{ RUN_ID=calc-A-basic-1 INTERVAL=30 ~/tta/capture-stills.sh > ~/tta/stills.log 2>&1 & } && \
+tl stills_started && echo READY
 ```
 
 Health checks any time: `tart list` (state=running) · `tart ip run-calc-A-basic-1` (prints an IP once booted).

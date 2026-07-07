@@ -73,6 +73,8 @@ let apiErrorLines = 0;               // retry/error signal (A6 amendment)
 let userTurns = 0;
 let firstUserTs = null, minTs = null, maxTs = null;
 let badLines = 0;
+const allEventTs = [];               // every timestamped transcript entry (idle analysis)
+const humanInputTs = [];             // real operator inputs (not tool_results)
 
 for (const f of files) {
   const rel = relative(bundleDir, f);
@@ -86,10 +88,16 @@ for (const f of files) {
     if (!Number.isNaN(ts)) {
       if (minTs === null || ts < minTs) minTs = ts;
       if (maxTs === null || ts > maxTs) maxTs = ts;
+      allEventTs.push(ts);
     }
     if (e.type === 'user' && !e.isMeta) {
-      userTurns++;
-      if (firstUserTs === null && !Number.isNaN(ts)) firstUserTs = ts;
+      const c = e.message?.content;
+      const isToolResult = Array.isArray(c) && c.some(b => b?.type === 'tool_result');
+      if (!isToolResult) {
+        userTurns++;
+        if (firstUserTs === null && !Number.isNaN(ts)) firstUserTs = ts;
+        if (!Number.isNaN(ts)) humanInputTs.push(ts);
+      }
     }
     if (e.type === 'assistant' && e.message) {
       if (e.isApiErrorMessage) { apiErrorLines++; continue; }
@@ -176,6 +184,57 @@ if (existsSync(manifestPath)) { try { manifest = JSON.parse(readFileSync(manifes
 const fmt = t => t === null ? 'unknown' : new Date(t).toISOString();
 const durMin = (a, b) => (a !== null && b !== null) ? +((b - a) / 60000).toFixed(1) : null;
 
+// ---- time tally: harness event logs + transcript-derived idle/latency -------------
+// Sources: run-times.log (host events from run-pilot.sh) + guest-run-times.log
+// (in-VM events from the setup block's tl() helper) + the transcript itself.
+const timeline = [];
+for (const f of ['run-times.log', 'guest-run-times.log']) {
+  const p = join(bundleDir, f);
+  if (!existsSync(p)) continue;
+  for (const line of readFileSync(p, 'utf8').split('\n')) {
+    const parts = line.split('\t');
+    const t = Date.parse(parts[0]);
+    if (parts.length >= 3 && !Number.isNaN(t)) timeline.push({ t, src: parts[1], event: parts.slice(2).join(' ') });
+  }
+}
+if (firstUserTs !== null) timeline.push({ t: firstUserTs, src: 'transcript', event: 'first_user_message (clock start)' });
+if (maxTs !== null) timeline.push({ t: maxTs, src: 'transcript', event: 'last_transcript_event' });
+timeline.sort((a, b) => a.t - b.t);
+
+allEventTs.sort((a, b) => a - b);
+const IDLE_MS = 60_000;
+const idleGaps = [];
+for (let i = 1; i < allEventTs.length; i++) {
+  const gap = allEventTs[i] - allEventTs[i - 1];
+  if (gap > IDLE_MS) idleGaps.push({ from: fmt(allEventTs[i - 1]), to: fmt(allEventTs[i]), seconds: Math.round(gap / 1000) });
+}
+const idleTotalSec = idleGaps.reduce((a, g) => a + g.seconds, 0);
+// operator latency: time from the previous transcript event to each human input
+const opWaitsSec = [];
+for (const t of humanInputTs) {
+  let prev = null;
+  for (const x of allEventTs) { if (x < t) prev = x; else break; }
+  if (prev !== null) opWaitsSec.push((t - prev) / 1000);
+}
+opWaitsSec.sort((a, b) => a - b);
+const median = arr => arr.length ? arr[Math.floor(arr.length / 2)] : null;
+const evOf = name => { const e = timeline.find(x => x.event.startsWith(name)); return e ? e.t : null; };
+const timing = {
+  script_start: fmt(evOf('script_start')),
+  vm_boot: fmt(evOf('vm_boot_exec')),
+  guest_setup_start: fmt(evOf('guest_setup_start')),
+  claude_launch: fmt(evOf('claude_launch')),
+  clock_start_first_user_message: fmt(firstUserTs),
+  run_end_marker: fmt(evOf('run_end')),
+  last_transcript_event: fmt(maxTs),
+  minutes_full_sequence: durMin(evOf('script_start') ?? firstUserTs, evOf('run_end') ?? maxTs),
+  minutes_run_window: durMin(firstUserTs, maxTs),
+  idle_gaps_over_60s: idleGaps,
+  idle_total_seconds: idleTotalSec,
+  operator_latency_seconds: { n: opWaitsSec.length, median: median(opWaitsSec), max: opWaitsSec.length ? opWaitsSec[opWaitsSec.length - 1] : null },
+  harness_log_events: timeline.length,
+};
+
 // ---- outputs ---------------------------------------------------------------------
 const metrics = {
   run_id: runId, generated_at: null, // stamped by the operator/report author, not the script (no clock dependence in CI)
@@ -192,11 +251,32 @@ const metrics = {
   tracker_cross_check: trackerCheck,
   unknown_models: unknownModels,
   manifest_present: !!manifest,
+  timing,
 };
 
 const outDir = join(bundleDir, 'analysis');
 mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, 'metrics.json'), JSON.stringify(metrics, null, 2));
+
+// human-readable time tally (output-run-times)
+const secFmt = s => s == null ? 'n/a' : (s >= 90 ? `${(s / 60).toFixed(1)} min` : `${Math.round(s)}s`);
+const tallyLines = [
+  `TIME TALLY — ${runId}`,
+  ``,
+  `Merged event timeline (${timeline.length} events: host log + guest log + transcript anchors):`,
+  ...timeline.map(e => `  ${new Date(e.t).toISOString()}  [${e.src}]  ${e.event}`),
+  ``,
+  `Totals:`,
+  `  full sequence (first harness command -> run end):  ${timing.minutes_full_sequence ?? 'n/a'} min`,
+  `  run window (clock start -> last transcript event): ${timing.minutes_run_window ?? 'n/a'} min`,
+  `  idle gaps >60s inside the transcript: ${idleGaps.length} totaling ${secFmt(idleTotalSec)}`,
+  ...idleGaps.map(g => `    ${g.from} -> ${g.to}  (${secFmt(g.seconds)})`),
+  `  operator response latency: n=${timing.operator_latency_seconds.n}, median ${secFmt(timing.operator_latency_seconds.median)}, max ${secFmt(timing.operator_latency_seconds.max)}`,
+  timeline.length <= 2 ? `` : null,
+  timeline.some(e => e.src === 'host' || e.src === 'guest') ? '' :
+    '  NOTE: no harness timing logs in this bundle (run predates run-times.log) — transcript-derived numbers only.',
+].filter(l => l !== null);
+writeFileSync(join(outDir, 'run-times.txt'), tallyLines.join('\n') + '\n');
 
 const usd = v => v == null ? 'n/a (unknown model id)' : `$${v.toFixed(4)}`;
 const modelRows = Object.entries(perModel).map(([m, t]) =>
@@ -235,6 +315,12 @@ ${unknownModels.length ? `- ⚠️ Unknown model ids (no pinned price): ${unknow
 - Last transcript event: ${fmt(maxTs)}
 - Duration (first user → last event): ${durMin(firstUserTs, maxTs) ?? 'unknown'} min
 - **Authoritative clock is the operator log** (start = instruction paste, end = DONE/cap); the transcript window above is the cross-check.
+
+## Time tally
+
+- Full sequence (first harness command → run end): **${timing.minutes_full_sequence ?? 'n/a'} min** · run window (clock start → last transcript event): **${timing.minutes_run_window ?? 'n/a'} min**
+- Idle gaps >60s: **${idleGaps.length}** totaling **${Math.round(idleTotalSec / 60)} min** · operator latency: median ${timing.operator_latency_seconds.median ?? 'n/a'}s, max ${timing.operator_latency_seconds.max ?? 'n/a'}s (n=${timing.operator_latency_seconds.n})
+- Full merged timeline: \`analysis/run-times.txt\`
 
 ## Tool calls
 
