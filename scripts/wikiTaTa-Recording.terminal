@@ -1276,6 +1276,8 @@
 	qQC8AL4A6QEUARYBGAEaASEBJgEsAS4BMAEyDX4Ngw2ODZcNpA2nDbQNvQ3CDcoAAAAA
 	AAACAQAAAAAAAAAqAAAAAAAAAAAAAAAAAAANzQ==
 	</data>
+	<key>Bell</key>
+	<false/>
 	<key>BlinkText</key>
 	<false/>
 	<key>CursorColor</key>
@@ -1595,6 +1597,10 @@
 	AgEAAAAAAAAAKgAAAAAAAAAAAAAAAAAADcs=
 	</data>
 	<key>UseBrightBold</key>
+	<false/>
+	<key>VisualBell</key>
+	<true/>
+	<key>VisualBellOnlyWhenMuted</key>
 	<false/>
 	<key>columnCount</key>
 	<integer>110</integer>

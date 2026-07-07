@@ -4,7 +4,7 @@
 # fresh (block-graphic header + colored step tracker + ONE pulsing
 # highlighter "PRESS RETURN" action) — the operator never sees a scrollback
 # wall, and the recording only ever shows the current step.
-HARNESS_VERSION="1.6.18"
+HARNESS_VERSION="1.6.19"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 ATTNF="$HOME/tta/attention"
 export LANG="${LANG:-en_US.UTF-8}"
@@ -246,5 +246,8 @@ case "$THEME" in
   *) CLAUDE_THEME=light;;
 esac
 claude config set -g theme "$CLAUDE_THEME" >/dev/null 2>&1 || true
+# ring the terminal bell whenever Claude needs input — our recording profile
+# renders it as a VISUAL screen flash (no sound; screenshare-proof)
+claude config set -g preferredNotifChannel terminal_bell >/dev/null 2>&1 || true
 "$HOME/tta/tl" claude_launch
 cd "$HOME/challenge/$PROJECT" && exec claude
