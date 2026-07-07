@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TTA Run Viewer — snapshots + video</title>
+<style>
+  :root { --bg:#0d0d0d; --panel:#171717; --border:#333; --text:#e8e8e8; --dim:#c0c0c0; --accent:#9868c0; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font:16px/1.5 -apple-system, system-ui, sans-serif; padding:24px; }
+  h1 { font-size:22px; margin-bottom:4px; }
+  .sub { color:var(--dim); font-size:14px; margin-bottom:20px; }
+  .stage { background:#000; border:1px solid var(--border); border-radius:10px; overflow:hidden; max-width:1100px; }
+  .stage img { display:block; width:100%; height:auto; }
+  .controls { display:flex; align-items:center; gap:14px; flex-wrap:wrap; max-width:1100px;
+              background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px 16px; margin-top:12px; }
+  button { background:#222; color:var(--text); border:1px solid var(--border); border-radius:8px;
+           padding:10px 18px; font-size:16px; cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  button.primary { background:var(--accent); color:#0d0d0d; font-weight:700; border-color:var(--accent); }
+  .stepper { display:inline-flex; align-items:center; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .stepper button { border:none; border-radius:0; width:44px; font-size:20px; font-weight:700; }
+  .stepper .val { padding:0 14px; min-width:110px; text-align:center; font-variant-numeric:tabular-nums; color:var(--text); }
+  input[type=range] { flex:1; min-width:200px; accent-color:var(--accent); }
+  .counter { color:var(--dim); font-variant-numeric:tabular-nums; min-width:110px; }
+  .section { margin-top:32px; max-width:1100px; }
+  .section h2 { font-size:18px; margin-bottom:10px; }
+  video { width:100%; border:1px solid var(--border); border-radius:10px; background:#000; }
+  .empty { padding:60px 20px; text-align:center; color:var(--dim); }
+  .ts { color:var(--dim); font-size:13px; margin-top:6px; }
+</style>
+</head>
+<body>
+<h1>Run Viewer</h1>
+<div class="sub" id="runname">Loads <code>manifest.json</code> from this folder — drop this file into any run bundle directory.</div>
+
+<div class="stage"><img id="frame" alt="run snapshot"><div class="empty" id="noframes" hidden>No stills found — is manifest.json present?</div></div>
+<div class="ts" id="framets"></div>
+
+<div class="controls">
+  <button class="primary" id="playpause">▶ Play</button>
+  <span class="stepper">
+    <button id="slower" aria-label="Slower">−</button>
+    <span class="val" id="speedval">5.0 s/frame</span>
+    <button id="faster" aria-label="Faster">+</button>
+  </span>
+  <input type="range" id="scrub" min="0" max="0" value="0" step="1" aria-label="Scrub frames">
+  <span class="counter" id="counter">– / –</span>
+</div>
+
+<div class="section" id="videosec" hidden>
+  <h2>Full screen recording</h2>
+  <video id="video" controls preload="metadata"></video>
+</div>
+
+<script>
+(async function () {
+  let frames = [], idx = 0, playing = false, timer = null, interval = 5.0;
+  const $ = (id) => document.getElementById(id);
+
+  try {
+    const m = await (await fetch('manifest.json')).json();
+    frames = m.stills || [];
+    if (m.run_id) $('runname').textContent = 'Run: ' + m.run_id;
+    if (m.video) { $('videosec').hidden = false; $('video').src = m.video; }
+  } catch { /* fall through to empty state */ }
+
+  if (!frames.length) { $('noframes').hidden = false; $('frame').style.display = 'none'; return; }
+  $('scrub').max = frames.length - 1;
+
+  function show(i) {
+    idx = Math.max(0, Math.min(frames.length - 1, i));
+    const f = frames[idx];
+    $('frame').src = typeof f === 'string' ? f : f.file;
+    $('framets').textContent = (typeof f === 'object' && f.ts) ? f.ts : '';
+    $('scrub').value = idx;
+    $('counter').textContent = (idx + 1) + ' / ' + frames.length;
+  }
+
+  function tick() { if (idx >= frames.length - 1) { pause(); return; } show(idx + 1); }
+  function play() { playing = true; $('playpause').textContent = '⏸ Pause'; timer = setInterval(tick, interval * 1000); }
+  function pause() { playing = false; $('playpause').textContent = '▶ Play'; clearInterval(timer); }
+  function retime() { $('speedval').textContent = interval.toFixed(2).replace(/0$/,'') + ' s/frame'; if (playing) { clearInterval(timer); timer = setInterval(tick, interval * 1000); } }
+
+  $('playpause').onclick = () => playing ? pause() : (idx >= frames.length - 1 && show(0), play());
+  $('slower').onclick = () => { interval = Math.min(10, interval + (interval >= 1 ? 0.5 : 0.25)); retime(); };
+  $('faster').onclick = () => { interval = Math.max(0.25, interval - (interval > 1 ? 0.5 : 0.25)); retime(); };
+  $('scrub').oninput = (e) => { pause(); show(+e.target.value); };
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { pause(); show(idx + 1); }
+    if (e.key === 'ArrowLeft')  { pause(); show(idx - 1); }
+    if (e.key === ' ')          { e.preventDefault(); $('playpause').click(); }
+  });
+
+  show(0); retime();
+})();
+</script>
+</body>
+</html>
