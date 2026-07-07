@@ -4,7 +4,7 @@
 # fresh (block-graphic header + colored step tracker + ONE pulsing
 # highlighter "PRESS RETURN" action) — the operator never sees a scrollback
 # wall, and the recording only ever shows the current step.
-HARNESS_VERSION="1.6.23"
+HARNESS_VERSION="1.6.24"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 ATTNF="$HOME/tta/attention"
 export LANG="${LANG:-en_US.UTF-8}"
@@ -96,15 +96,24 @@ trap 'printf "\033[?25h\033[0m"; [ -n "$PULSER" ] && kill "$PULSER" 2>/dev/null'
 # every ANSI slot above the contrast floor, incl. the dim grey Claude Code
 # uses). Import = open the .terminal file once (spawns a stray window we
 # close), then it is selectable like any stock profile.
+rec_profile_name() { # the profile's ACTUAL imported name (Terminal names it
+  # after the FILE -> "wikiTaTa-Recording", not the plist's "wikiTaTa
+  # Recording"). Resolve it live so apply never silently no-ops on the mismatch.
+  osascript -e 'tell application "Terminal" to get name of every settings set' 2>/dev/null \
+    | tr ',' '\n' | sed 's/^ *//' | grep -i 'wikiTaTa.*Recording' | head -1
+}
+REC_NAME=""
 ensure_recording_profile() {
   [ -f "$HOME/tta/wikiTaTa-Recording.terminal" ] || return 1
-  if ! osascript -e 'tell application "Terminal" to get name of every settings set' 2>/dev/null | grep -q "wikiTaTa Recording"; then
+  REC_NAME="$(rec_profile_name)"
+  if [ -z "$REC_NAME" ]; then
     open "$HOME/tta/wikiTaTa-Recording.terminal"
     sleep 1.2
     osascript -e 'tell application "Terminal" to close front window' >/dev/null 2>&1 || true
     focus_main
+    REC_NAME="$(rec_profile_name)"
   fi
-  return 0
+  [ -n "$REC_NAME" ]
 }
 
 # ---- PAGE: welcome + color scheme (repainted WHOLE after every try —
@@ -139,14 +148,14 @@ theme_page() { # $1 = status line ("" = none yet)
 }
 THEME=""
 if ensure_recording_profile; then
-  THEME="wikiTaTa Recording"
+  THEME="$REC_NAME"          # the real imported name (hyphen), so apply STICKS
   apply_theme "$THEME"
 fi
 theme_page ""
 while :; do
   read -rsn1 CH || { printf '\033[?25h\033[0m\n'; exit 1; }
   case "$CH" in
-    0) T2="wikiTaTa Recording";;
+    0) T2="${REC_NAME:-wikiTaTa-Recording}";;
     1) T2="Basic";;      2) T2="Homebrew";;  3) T2="Pro";;
     4) T2="Ocean";;      5) T2="Man Page";;  6) T2="Novel";;
     7) T2="Red Sands";;  8) T2="Grass";;     9) T2="Silver Aerogel";;
@@ -246,7 +255,7 @@ echo guide > "$ATTNF"
 # sync Claude Code's OWN theme to the terminal background so its text is
 # never dark-theme grey on a light window (or vice versa) in the recording
 case "$THEME" in
-  "wikiTaTa Recording"|Homebrew|Pro|Ocean|"Red Sands"|Grass) CLAUDE_THEME=dark;;
+  wikiTaTa*Recording|Homebrew|Pro|Ocean|"Red Sands"|Grass) CLAUDE_THEME=dark;;
   *) CLAUDE_THEME=light;;
 esac
 claude config set -g theme "$CLAUDE_THEME" >/dev/null 2>&1 || true

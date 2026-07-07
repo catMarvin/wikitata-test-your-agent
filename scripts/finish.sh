@@ -9,7 +9,7 @@
 #   3. stops the recording, stamps run_end, prints proof + export command
 #      (via end-run.sh — ONE wrap path).
 # Run it in a NEW Terminal window (Command+N) — Claude Code owns MAIN.
-HARNESS_VERSION="1.6.23"
+HARNESS_VERSION="1.6.24"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 SHOW_SECS="${TTA_SHOW_SECS:-20}"
 tl() { printf '%s\tguest\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" >> "$HOME/tta/run-times.log"; }
