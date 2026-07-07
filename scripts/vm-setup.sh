@@ -4,7 +4,7 @@
 # prompt, installs the run tools (~/tta/*.sh), and docks this window left.
 # Usage:  curl -fsSL <raw>/scripts/vm-setup.sh | bash -s [project] [run-id]
 set -euo pipefail
-HARNESS_VERSION="1.6.25"
+HARNESS_VERSION="1.6.26"
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
 RAW="https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main"
@@ -26,11 +26,25 @@ unzip -q -o "$HOME/${PROJECT}-starter.zip" -d "$HOME/challenge"
 tl starter_unpacked
 
 say "installing run tools into ~/tta ..."
-for s in capture-stills.sh record-screen.sh run-guide.sh start-recording.sh open-guide.sh end-run.sh begin.sh finish.sh wikiTaTa-Recording.terminal; do
+for s in capture-stills.sh record-screen.sh run-guide.sh start-recording.sh open-guide.sh end-run.sh begin.sh finish.sh accept-drive.mjs wikiTaTa-Recording.terminal; do
   curl -fsSL "$RAW/scripts/$s" -o "$HOME/tta/$s"
 done
+# machine-readable acceptance battery (single source; accept-drive.mjs reads it)
+mkdir -p "$HOME/tta/acceptance"
+curl -fsSL "$RAW/scripts/acceptance/${PROJECT}.json" -o "$HOME/tta/acceptance/${PROJECT}.json" 2>/dev/null || \
+  say "  (no acceptance spec for $PROJECT — finish will use manual entry)"
 curl -fsSL "$RAW/instructions/${PROJECT}.txt" -o "$HOME/tta/startup-instruction.txt"
-chmod +x "$HOME"/tta/*.sh
+chmod +x "$HOME"/tta/*.sh 2>/dev/null || true
+
+# Let finish.sh AUTO-DRIVE the acceptance battery in Safari via `do JavaScript`
+# (v1.6.26). Needs the Safari pref below AND a one-time Terminal->Safari
+# Automation approval — the latter is granted once on the GOLDEN image so every
+# clone inherits it (see RUNBOOK golden-image prep). If either is missing,
+# accept-drive.mjs exits 2 and finish.sh falls back to manual entry.
+say "enabling Safari JavaScript-from-Apple-Events (for the auto acceptance run)..."
+defaults write com.apple.Safari IncludeDevelopMenu -bool true 2>/dev/null || true
+defaults write com.apple.Safari AllowJavaScriptFromAppleEvents -bool true 2>/dev/null || true
+defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaScriptCanOpenWindowsAutomatically -bool true 2>/dev/null || true
 # tl = timing-log stamper as a REAL script (works from any window/shell)
 printf '#!/bin/bash\nprintf "%%s\\tguest\\t%%s\\n" "$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)" "$*" >> "$HOME/tta/run-times.log"\n' > "$HOME/tta/tl"
 chmod +x "$HOME/tta/tl"

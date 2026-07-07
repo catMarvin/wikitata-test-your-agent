@@ -21,7 +21,7 @@
 # guide_opened_clipboard_loaded into the timing log.
 #
 # Usage: run-guide.sh [project] [run-id]   (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.25"
+HARNESS_VERSION="1.6.26"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
@@ -240,15 +240,24 @@ while :; do
       L  "    dev server starting, Safari opening the finished app."
       L  ""
       if grep -q "acceptance_tests_shown" "$TLOG" 2>/dev/null && [ -s "$HOME/tta/acceptance.txt" ]; then
-        PL "  ▶▶ KEY THESE INTO THE APP NOW - same battery every run ◀◀"
+        if grep -q "acceptance_auto_unavailable" "$TLOG" 2>/dev/null; then
+          PL "  ▶▶ KEY THESE INTO THE APP NOW - same battery every run ◀◀"
+        else
+          PL "  ▶▶ ACCEPTANCE BATTERY - typing itself into the app (auto) ◀◀"
+        fi
         L  ""
         while IFS= read -r tln; do L "     $tln"; done < "$HOME/tta/acceptance.txt"
         L  ""
-        BL "    Done with all 8? Press Return in the FINISH window -"
-        BL "    the recording stops and everything finalizes."
+        if grep -q "acceptance_auto_unavailable" "$TLOG" 2>/dev/null; then
+          BL "    Done with all 8? Press Return in the FINISH window -"
+          BL "    the recording stops and everything finalizes."
+        else
+          BL "    Watch it run - each test is keyed in and scored, then the"
+          BL "    recording holds ~20s and finalizes. No typing needed."
+        fi
       else
         L  "    The uniform acceptance battery will appear RIGHT HERE"
-        L  "    in a moment - you will key it into the app on camera."
+        L  "    in a moment - it types itself into the app on camera."
       fi
       ;;
     wrapup)

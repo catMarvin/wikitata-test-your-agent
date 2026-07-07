@@ -1,0 +1,32 @@
+{
+  "project": "calculator",
+  "battery": "calc-uniform-v2",
+  "note": "Machine-readable uniform acceptance battery. The driver (accept-drive.mjs) types these into the finished app AS A USER WOULD: keyboard events for basic arithmetic (which is a GRADED spec requirement — PROJECT-BRIEF 'Keyboard entry works'), button clicks for scientific functions the keyboard spec does not guarantee. T8 changed in v1.6.26: sin(30 deg) removed — the brief specifies no deg/rad mode, so both a human operator and the driver had no defined way to select degrees; replaced with 5! (factorial), which is exact and mode-independent.",
+  "typeDelayMs": 190,
+  "settleMs": 650,
+  "clearBetween": true,
+  "read": {
+    "selectors": [
+      "[data-testid='display']", "[data-testid='result']", "[data-testid='output']",
+      ".display", ".result", ".output", ".screen", ".calc-display", ".calculator-display",
+      "#display", "#result", "#output", "output"
+    ],
+    "strategy": "prefer-selector-else-largest-numeric"
+  },
+  "tests": [
+    { "id": "T1", "group": "BASIC", "label": "1 × 2 × 3 + 4 − 5   → 5",   "method": "keyboard", "keys": "1*2*3+4-5=", "expect": 5 },
+    { "id": "T2", "group": "BASIC", "label": "12.5 + 87.5          → 100", "method": "keyboard", "keys": "12.5+87.5=", "expect": 100 },
+    { "id": "T3", "group": "BASIC", "label": "22 ÷ 7               → 3.142857", "method": "keyboard", "keys": "22/7=", "expect": 3.142857, "tol": 0.001 },
+    { "id": "T4", "group": "BASIC", "label": "(8 + 2) × (6 − 1)    → 50",  "method": "keyboard", "keys": "(8+2)*(6-1)=", "expect": 50 },
+    { "id": "T5", "group": "BASIC", "label": "100 − 250            → -150", "method": "keyboard", "keys": "100-250=", "expect": -150 },
+    { "id": "T6", "group": "SCIENTIFIC", "label": "√144                 → 12",   "method": "click",
+      "tries": [ ["144","√","="], ["144","√"], ["√","144","="], ["144","sqrt","="], ["sqrt","144","="], ["144","√x","="] ],
+      "expect": 12 },
+    { "id": "T7", "group": "SCIENTIFIC", "label": "2 ^ 10               → 1024", "method": "keyboard-then-click", "keys": "2^10=",
+      "tries": [ ["2","xⁿ","10","="], ["2","x^y","10","="], ["2","^","10","="], ["2","yˣ","10","="], ["2","pow","10","="] ],
+      "expect": 1024 },
+    { "id": "T8", "group": "SCIENTIFIC", "label": "5!                   → 120  (replaces sin 30°)", "method": "keyboard-then-click", "keys": "5!=",
+      "tries": [ ["5","x!","="], ["5","n!","="], ["5","!","="], ["5","!"] ],
+      "expect": 120 }
+  ]
+}

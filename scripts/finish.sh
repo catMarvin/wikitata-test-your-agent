@@ -4,12 +4,15 @@
 # no Ctrl-C hunt. It:
 #   1. stamps agent_done;
 #   2. starts the project's dev server (npm run dev, preview fallback) and
-#      opens Safari on it, paints the UNIFORM 8-test acceptance battery
-#      (performed on camera; Return-gated);
+#      opens Safari on it, then AUTO-DRIVES the UNIFORM acceptance battery on
+#      camera as a user would (accept-drive.mjs; keyboard-first for arithmetic,
+#      button-click for scientific) and SCORES it — manual entry only as a
+#      fallback when Safari isn't drivable (v1.6.26, Todd S721);
 #   3. stops the recording, stamps run_end, prints proof + export command
 #      (via end-run.sh — ONE wrap path).
 # Run it in a NEW Terminal window (Command+N) — Claude Code owns MAIN.
-HARNESS_VERSION="1.6.25"
+# Escape hatch: TTA_AUTO_ACCEPT=off forces the old manual Return-gated battery.
+HARNESS_VERSION="1.6.26"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 SHOW_SECS="${TTA_SHOW_SECS:-20}"
 tl() { printf '%s\tguest\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" >> "$HOME/tta/run-times.log"; }
@@ -65,35 +68,48 @@ fi
 
 if [ "$SHOWCASE" = "1" ]; then
   # the UNIFORM acceptance battery — identical for every creation, performed
-  # ON CAMERA. Single source: written to acceptance.txt; the RUN GUIDE
-  # (top right) watches the stamps and renders it too, PULSING — so the
-  # tests stay visible even when Safari covers this window.
-  cat > "$HOME/tta/acceptance.txt" <<'TESTS'
-BASIC
-  T1   1 * 2 * 3 + 4 - 5        expect 5
-  T2   12.5 + 87.5              expect 100
-  T3   22 / 7                   expect 3.1428571...
-  T4   ( 8 + 2 ) * ( 6 - 1 )    expect 50
-  T5   100 - 250                expect -150
-SCIENTIFIC
-  T6   sqrt(144)                expect 12
-  T7   2 ^ 10                   expect 1024
-  T8   sin(30 deg)              expect 0.5
-TESTS
+  # ON CAMERA. Single source of truth = the JSON spec (acceptance/$PROJECT.json);
+  # accept-drive.mjs writes acceptance.txt from it (the RUN GUIDE, top right,
+  # watches the stamps and renders it PULSING) and, when Safari is drivable,
+  # TYPES the battery in as a user would and scores each test.
+  SPEC="$HOME/tta/acceptance/$PROJECT.json"
   echo ""
   printf '\033[1;36m ╔════════════════════════════════════════════════════════════╗\033[0m\n'
-  printf '\033[1;36m ║   UNIFORM ACCEPTANCE TEST - perform these IN the app now    ║\033[0m\n'
+  printf '\033[1;36m ║   UNIFORM ACCEPTANCE TEST - same battery every run          ║\033[0m\n'
   printf '\033[1;36m ╚════════════════════════════════════════════════════════════╝\033[0m\n'
-  echo "   Key each one in; watch the tape record it. Same battery for"
-  echo "   every creation, so runs stay comparable. (The RUN GUIDE window,"
-  echo "   top right, shows this list too - follow it there.)"
-  echo ""
-  sed 's/^/   /' "$HOME/tta/acceptance.txt"
-  echo ""
-  printf '\033[1m   PRESS RETURN here when the tests are done.\033[0m\n'
   tl acceptance_tests_shown
-  read -r || true
+  sleep 3   # let Safari paint the finished app before driving it
+
+  AUTO_ACCEPT="${TTA_AUTO_ACCEPT:-on}"
+  DROVE=0
+  if [ "$AUTO_ACCEPT" != "off" ] && [ -f "$SPEC" ] && command -v node >/dev/null 2>&1; then
+    echo "   auto-driving the battery (keyboard as a user would; scientific by button)..."
+    echo ""
+    if node "$HOME/tta/accept-drive.mjs" "$SPEC"; then
+      DROVE=1
+      tl acceptance_auto_done
+      echo ""
+      echo "   auto-run complete - results: $HOME/tta/acceptance-results.json"
+    else
+      echo ""
+      echo "   (auto-drive unavailable - falling back to MANUAL entry)"
+      tl acceptance_auto_unavailable
+    fi
+  fi
+
+  if [ "$DROVE" != "1" ]; then
+    # MANUAL fallback — the driver writes acceptance.txt even when it can't drive
+    [ -s "$HOME/tta/acceptance.txt" ] || node "$HOME/tta/accept-drive.mjs" "$SPEC" --txt "$HOME/tta/acceptance.txt" >/dev/null 2>&1 || true
+    echo "   Key each one into the app; watch the tape record it. Same battery"
+    echo "   every run, so runs stay comparable. (RUN GUIDE window shows it too.)"
+    echo ""
+    sed 's/^/   /' "$HOME/tta/acceptance.txt" 2>/dev/null
+    echo ""
+    printf '\033[1m   PRESS RETURN here when the tests are done.\033[0m\n'
+    read -r || true
+  fi
   tl acceptance_tests_done
+
   # keep recording a clean tail of the finished app before stopping (Todd:
   # not a 5s wrap — hold ~20s). Configurable via run.conf TTA_WRAP_HOLD.
   HOLD="${TTA_WRAP_HOLD:-20}"
