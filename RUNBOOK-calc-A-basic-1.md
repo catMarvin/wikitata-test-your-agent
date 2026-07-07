@@ -1,5 +1,5 @@
 # Operator Runbook — pilot run `calc-A-basic-1`
-**Version 1.5** · revisions increment 1.1, 1.2, 1.3… (never a 2.x without a protocol change)
+**Version 1.6** · revisions increment 1.1, 1.2, 1.3… (never a 2.x without a protocol change)
 
 You are about to operate one instrumented challenge run: tier **A** (bare Claude, no MCP), project **Calculator**, persona **BASIC**. Hands-on setup is a few minutes; then you mostly watch. The run itself ends when the agent finishes or at **45 minutes**, whichever comes first.
 
@@ -75,42 +75,32 @@ One short line in the VM's Terminal (also printed by the launcher's checklist). 
 curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/vm-setup.sh | bash -s calculator calc-A-basic-1
 ```
 
-✅ **You should now see:** a short narrated list ending in `READY — harness v1.6.2` and `NEXT: ~/tta/start-recording.sh`.
+✅ **You should now see:** a short narrated list ending in `READY — harness v1.6.12` and `NEXT: ~/tta/begin.sh`.
 ❌ If you see `command not found` or an error mentioning `curl` or `unzip`: stop, note the exact text, and report it.
 
-### Step 5. Start the screen recording — MANUAL. This is the step people miss.
+### Step 5. Run the guided wizard — from here, you only press Return
 
-The stills camera from Step 4 is automatic; the video recording starts with one more paste. *(Required for instrumented runs — it is a mandatory evidence witness. Casual challengers outside the harness: recommended, not required — see CAPTURE.md.)*
+One line in the VM's Terminal:
 
-1. In the VM's Terminal, run — it opens the recording window (full screen capture + live elapsed clock, docked bottom-right) and verifies itself:
-   ```bash
-   ~/tta/start-recording.sh
-   ```
-2. **The line verifies itself** — it always ends by telling you which world you are in:
-   - `>>> YES: RECORDING IS LIVE — continue to the next step <<<` → go to Step 6.
-   - `>>> NO: NOT RECORDING — STOP HERE ... <<<` → macOS is asking for (or needs) the Screen Recording permission: click **Allow** (System Settings opens: switch **Terminal** on, password `admin`, let Terminal quit & reopen), then paste the same line again. Re-pasting is always safe — it stops any previous recorder before starting a new one.
+```bash
+~/tta/begin.sh
+```
 
-✅ **You should now see:** the `YES: RECORDING IS LIVE` verdict in this window, and the elapsed clock ticking in the recording window. Clock ticking = recording; clock gone (`NO LONGER BEING RECORDED`) = not.
-🚫 **A `NO` verdict means stop — full stop.** A run without the recording is missing a required piece of evidence.
-📺 Re-check any time during the run: `pgrep -x screencapture >/dev/null && echo YES || echo NO`
+The wizard **pages like an installer**: each screen shows the step tracker and exactly ONE **pulsing** `PRESS RETURN` action — do whatever pulses. In order, it: confirms the stills camera is rolling → starts the **screen recording** (a clock window docks bottom-right; ticking clock = recording) → opens the **run guide** (top-right) and loads the startup instruction onto the clipboard → launches the agent (Claude Code) right in the wizard's window.
+
+- If macOS asks for the **Screen Recording permission**, the wizard shows a retry page: click **Allow** (System Settings opens: switch **Terminal** on, password `admin`, let Terminal quit & reopen), run `~/tta/begin.sh` again if needed — re-running is always safe. The wizard will not move past that page until the recording is verified live. *(The recording is a mandatory evidence witness for instrumented runs; see CAPTURE.md for casual runs.)*
+- The three windows tile themselves without overlap: wizard/MAIN left, guide top-right, recording clock bottom-right. *(First time, macOS may ask to let Terminal control Finder — that's only for window positioning; Allow or Deny, everything works either way.)*
+- 📺 Re-check the recording any time: `pgrep -x screencapture >/dev/null && echo YES || echo NO`
 
 ---
 
 ## PART 3 — The run itself
 
-### Step 6. Open the run-guide window (it loads your clipboard)
+### Step 6. Follow the guide window — it advances by itself
 
-In the VM's Terminal, paste this **one line** and press **Return** — it opens a guide window that puts the official startup instruction **directly onto the VM's clipboard** and shows your next moves:
+The guide (top-right) is live: it always shows your **one next move** in a pulsing `DO THIS NOW` box, and moves to the next panel on its own as it detects the run's real signals (agent launched → instruction pasted → run live → recording stopped). You never type in the guide window.
 
-```bash
-~/tta/open-guide.sh
-```
-
-✅ **You should now see:** a guide window titled "YOUR NEXT MOVES" docked to the **top-right**, confirming the instruction is on the clipboard. The three windows now tile themselves: main Terminal left, guide top-right, recording clock bottom-right. *(First time, macOS may ask to let Terminal control Finder — that's only for window positioning; Allow or Deny, everything works either way.)*
-
-### Step 7. Follow the guide: launch, then ⌘V — the clock starts at the paste
-
-Per the guide's STEP 1, in the **main** VM Terminal: `tl claude_launch; cd ~/challenge/calculator && claude` → Claude Code starts, no login. Then STEP 2: click into Claude Code, press **⌘V** (or Edit → Paste), press **Return**.
+At the wizard's last `PRESS RETURN`, Claude Code opens in the MAIN window — no login. Then, per the guide: click into Claude Code, press **⌘V** (or Edit → Paste), press **Return**.
 
 The pasted text is exactly this — shown here for reference only; you never need to hand-copy it:
 
@@ -129,24 +119,26 @@ The pasted text is exactly this — shown here for reference only; you never nee
 
 ⏱ **The moment you press Return, the run has started.** Persona rules (top of this page) govern everything you do from now on. Note the time.
 
-### Step 8. Watch. The run ends two ways
+### Step 7. Watch. The run ends two ways
 
 - The agent declares it is **done**, or
 - **45 minutes** pass since the paste — then you stop it regardless.
+
+When it ends: click the **recording window** (bottom-right) and press **Ctrl-C** — the guide window then switches to its wrap-up panel by itself.
 
 ---
 
 ## PART 4 — Stop, save, export
 
-### Step 9. Stamp the end + stop the recording (inside the VM)
+### Step 8. Stamp the end + finalize the recording (inside the VM)
 
-1. In the VM's main Terminal, run — stamps the end time, stops + finalizes the recording, and prints the export command:
+1. As the guide's wrap-up panel says: open a **new** Terminal window inside the VM (**⌘N**) and run — it stamps the end time, stops + finalizes the recording, and prints the export command:
    ```bash
    ~/tta/end-run.sh
    ```
 ✅ **You should now see:** `recording.mov` listed with a large file size, and `>>> RECORDING STOPPED AND SAVED <<<`. The recording window drops back to a prompt — its banner gone is your visual confirmation.
 
-### Step 10. Export the results bundle (on the VM host)
+### Step 9. Export the results bundle (on the VM host)
 
 Click **outside** the VM window (you're back on the real Mac). Open a **new** Terminal (⌘-space → `Terminal` — the old one is still attached to the VM; leave it). Paste:
 
@@ -157,7 +149,7 @@ open ~/tta-runs/calc-A-basic-1/index.html
 
 ✅ **You should now see:** a list of what was pulled out of the VM (repo, transcripts, stills, recording…), then the **Run Viewer** page opening — a flip-book of the stills with the video below it.
 
-### Step 11. Hand off
+### Step 10. Hand off
 
 Report where the bundle is (`~/tta-runs/calc-A-basic-1` on the VM host). Analysis, token accounting, the time tally, and the run-report card are generated from it (`node scripts/analyze-run.mjs <bundle-dir>`). **Do not delete the VM** — leave it stopped for inspection.
 
@@ -175,4 +167,4 @@ Report where the bundle is (`~/tta-runs/calc-A-basic-1` on the VM host). Analysi
 | **Anything else** | Stop. Note the exact text and the step number. Leave everything as-is and report. A stopped run that teaches us something is the pilot doing its job. |
 
 ---
-*Revisions: 1.0 initial · 1.1 tart-run-holds-terminal fix · 1.2 state-based expectations + health checks · 1.3 display-path split · 1.4 generic operator rewrite (platform section, no host specifics) · 1.5 novice-fidelity rewrite: defined terms, per-step ✅ verification, manual-recording warning, zero-tab launcher flow, troubleshooting table.*
+*Revisions: 1.0 initial · 1.1 tart-run-holds-terminal fix · 1.2 state-based expectations + health checks · 1.3 display-path split · 1.4 generic operator rewrite (platform section, no host specifics) · 1.5 novice-fidelity rewrite: defined terms, per-step ✅ verification, manual-recording warning, zero-tab launcher flow, troubleshooting table · 1.6 wizard-paged flow: begin.sh drives recording/guide/launch, self-advancing pulsing run guide, non-overlapping window tiling.*

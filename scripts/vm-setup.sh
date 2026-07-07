@@ -4,7 +4,7 @@
 # prompt, installs the run tools (~/tta/*.sh), and docks this window left.
 # Usage:  curl -fsSL <raw>/scripts/vm-setup.sh | bash -s [project] [run-id]
 set -euo pipefail
-HARNESS_VERSION="1.6.11"
+HARNESS_VERSION="1.6.12"
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
 RAW="https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main"
@@ -43,7 +43,7 @@ tl stills_started
 osascript -e 'tell application "Finder" to set db to bounds of window of desktop' \
   -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' \
   -e 'tell application "Terminal" to set font size of selected tab of front window to 16' \
-  -e 'tell application "Terminal" to set bounds of front window to {0, 25, sw * 3 div 5, sh - 80}' \
+  -e 'tell application "Terminal" to set bounds of front window to {0, 25, sw * 27 div 50, sh - 80}' \
   >/dev/null 2>&1 || true
 
 echo

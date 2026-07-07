@@ -26,7 +26,7 @@
 #   ./run-pilot.sh <project> <golden-image> <run-id>
 set -euo pipefail
 
-HARNESS_VERSION="1.6.11"
+HARNESS_VERSION="1.6.12"
 PROJECT="${1:-calculator}"
 GOLDEN="${2:-tta-base-a}"
 RUN_ID="${3:-calc-A-basic-1}"
@@ -100,12 +100,13 @@ cat <<EOF
 
       ~/tta/begin.sh
 
-    It starts the stills camera, the screen recording (with its clock
-    window), the run guide (clipboard pre-loaded), and finally launches
-    the agent. You press Return between steps, Command+V at the end.
+    It pages like an installer: stills camera, screen recording (with
+    its clock window), the run guide (clipboard pre-loaded), then it
+    launches the agent right there. Do whatever PULSES: press Return
+    between steps, Command+V at the end.
 
- 4. Follow the guide: launch the agent, press Command+V, Return.
-    THE CLOCK STARTS AT THAT PASTE.
+ 3. The guide window (top right) advances by itself and always shows
+    your one next move. THE CLOCK STARTS AT THE PASTE.
 
  AFTER THE RUN (agent done, or 45-min cap):
 
