@@ -104,14 +104,16 @@ cat <<EOF
     tl stills_started && echo READY
 
  2. Start the FULL-SCREEN video recording (REQUIRED evidence for
-    instrumented runs) — paste this ONE line in the VM's Terminal;
-    no QuickTime, no clicking, records the entire screen:
+    instrumented runs). This ONE line opens a dedicated recording window
+    — while its banner shows, you are recording:
 
-      [ -f ~/tta/rec.pid ] && kill -INT \$(cat ~/tta/rec.pid) 2>/dev/null; { screencapture -v -x ~/tta/recording.mov >/dev/null 2>&1 & echo \$! > ~/tta/rec.pid; }; sleep 2; ls -l ~/tta/recording.mov && { tl recording_started 2>/dev/null || true; } && echo RECORDING
+      osascript -e 'tell application "Terminal" to do script "clear; printf \"\\n  >>> SCREEN RECORDING IN PROGRESS <<<\\n\\n  Leave this window open. TO STOP: click here, press Ctrl-C.\\n\\n\"; rm -f ~/tta/recording.mov; screencapture -v ~/tta/recording.mov"'
 
-    You should see RECORDING and the file listed. FIRST TIME ONLY, macOS
-    may ask Screen Recording permission for Terminal — approve it, then
-    paste the same line again (it is safe to re-paste).
+    FIRST TIME ONLY: approve the Screen Recording permission (password
+    admin), let Terminal reopen, paste again. Then VERIFY from your main
+    Terminal — do not trust, check:
+
+      pgrep -x screencapture >/dev/null && echo YES-RECORDING || echo NOT-RECORDING
 
  3. In the VM's Terminal, launch the agent (this stamps the clock-start):
 
@@ -120,10 +122,11 @@ cat <<EOF
     Paste the startup instruction from the runbook VERBATIM.
     The run clock starts at that paste. Persona rules apply from here.
 
- AFTER THE RUN (agent done, or 45-min cap): in the VM's Terminal paste:
-    tl run_end; kill -INT \$(cat ~/tta/rec.pid); sleep 3; ls -l ~/tta/recording.mov
- (stops + finalizes the recording — the file size shown is the proof),
- then back on the VM host:   cd ${STAGE} && ./export-run.sh ${VM} ${RUN_ID}
+ AFTER THE RUN (agent done, or 45-min cap): in the VM's main Terminal:
+    tl run_end 2>/dev/null; pkill -INT -x screencapture; sleep 3; ls -l ~/tta/recording.mov
+ (stops + finalizes — expect a large file size; the recording window's
+ banner disappearing is your visual confirmation), then on the VM host:
+    cd ${STAGE} && ./export-run.sh ${VM} ${RUN_ID}
 ==============================================================================
 EOF
 

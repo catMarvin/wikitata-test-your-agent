@@ -78,15 +78,19 @@ The boxed checklist from Step 2 printed a paste-block. Copy that whole block (al
 
 The stills camera from Step 4 is automatic; the video recording starts with one more paste. *(Required for instrumented runs — it is a mandatory evidence witness. Casual challengers outside the harness: recommended, not required — see CAPTURE.md.)*
 
-1. In the VM's Terminal, paste this **one line** and press **Return** — it records the **entire screen** to a file, no QuickTime, no clicking, nothing to aim:
+1. In the VM's Terminal, paste this **one line** and press **Return** — it opens a **dedicated recording window** that records the **entire screen** (no QuickTime, no clicking, nothing to aim):
    ```bash
-   [ -f ~/tta/rec.pid ] && kill -INT $(cat ~/tta/rec.pid) 2>/dev/null; { screencapture -v -x ~/tta/recording.mov >/dev/null 2>&1 & echo $! > ~/tta/rec.pid; }; sleep 2; ls -l ~/tta/recording.mov && { tl recording_started 2>/dev/null || true; } && echo RECORDING
+   osascript -e 'tell application "Terminal" to do script "clear; printf \"\\n  >>> SCREEN RECORDING IN PROGRESS <<<\\n\\n  This window IS the indicator: while it shows this text,\\n  the screen is being recorded. Leave it open.\\n\\n  TO STOP: click this window, press Ctrl-C.\\n\\n\"; rm -f ~/tta/recording.mov; screencapture -v ~/tta/recording.mov"'
    ```
-2. **First time only:** macOS may ask Screen Recording permission for Terminal — click **Allow** (open System Settings and switch it on if asked), then **paste the same line again**. Re-pasting is always safe: the line stops any previous recorder before starting a new one.
+2. **First time only:** macOS may ask Screen Recording permission for Terminal — click **Allow** (System Settings opens: switch **Terminal** on, enter the VM password `admin`, let Terminal quit & reopen), then paste the line again.
+3. **Verify it, don't trust it** — back in your main Terminal window, paste:
+   ```bash
+   pgrep -x screencapture >/dev/null && echo ">>> YES: SCREEN IS BEING RECORDED <<<" || echo ">>> NO: NOT RECORDING — redo the recording step <<<"
+   ```
 
-✅ **You should now see:** the word `RECORDING` and the `recording.mov` file listed.
-🚫 **Do not proceed to Part 3 until you see `RECORDING`.** A run without the recording is missing a required piece of evidence.
-*(Prefer a visible recording indicator? QuickTime works too: **⌘-space** → `QuickTime` → **File → New Screen Recording** → choose **Record Entire Screen** — the toolbar defaults to a selection lasso, so pick the full-screen option — then save as `recording.mov` to the VM Desktop at the end. Use one method, not both.)*
+✅ **You should now see:** a second Terminal window showing `>>> SCREEN RECORDING IN PROGRESS <<<`, and the verify line answering `YES`.
+🚫 **Do not proceed to Part 3 until the verify line says YES.** A run without the recording is missing a required piece of evidence.
+📺 The window stays visible the entire run — while it shows the banner, you're recording; when it drops back to a prompt, you're not. Run the verify line any time you're unsure.
 
 ---
 
@@ -132,12 +136,11 @@ Copy the block below **exactly, as one single message**, paste it into Claude Co
 
 ### Step 9. Stamp the end + stop the recording (inside the VM)
 
-1. In the VM's Terminal, paste and press **Return** — stamps the end time, stops the recorder, and shows the finished file:
+1. In the VM's main Terminal, paste and press **Return** — stamps the end time, stops the recorder (same as Ctrl-C in the recording window), and shows the finished file:
    ```bash
-   tl run_end; kill -INT $(cat ~/tta/rec.pid); sleep 3; ls -l ~/tta/recording.mov
+   tl run_end 2>/dev/null; pkill -INT -x screencapture; sleep 3; ls -l ~/tta/recording.mov; pgrep -x screencapture >/dev/null && echo ">>> STILL RECORDING?! report this" || echo ">>> RECORDING STOPPED AND SAVED <<<"
    ```
-✅ **You should now see:** `recording.mov` listed with a large file size.
-   *(If you used the QuickTime alternative instead: click its ⏹ menu-bar symbol, **File → Save** as `recording.mov` to the VM's **Desktop**, quit QuickTime.)*
+✅ **You should now see:** `recording.mov` listed with a large file size, and `>>> RECORDING STOPPED AND SAVED <<<`. The recording window drops back to a prompt — its banner gone is your visual confirmation.
 
 ### Step 10. Export the results bundle (on the VM host)
 
