@@ -21,7 +21,7 @@
 # guide_opened_clipboard_loaded into the timing log.
 #
 # Usage: run-guide.sh [project] [run-id]   (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.22"
+HARNESS_VERSION="1.6.23"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
@@ -96,6 +96,10 @@ while :; do
   # ---- advance the state machine from the run's real signals ----
   if grep -q "run_end" "$TLOG" 2>/dev/null; then
     if [ "$STATE" != "done" ]; then STATE=done; echo guide > "$ATTNF"; fi
+  elif grep -q "agent_done_finish_started" "$TLOG" 2>/dev/null; then
+    # the agent declared done and finish.sh is running — the guide takes
+    # over the prompting (Todd: claude's final step triggers MORE guidance)
+    if [ "$STATE" != "finish" ]; then STATE=finish; echo guide > "$ATTNF"; fi
   else
     case "$STATE" in
       launch)
@@ -186,6 +190,27 @@ while :; do
       BL "      ~/tta/finish.sh"
       L  "  It puts the finished app on camera, then stops the"
       L  "  recording and wraps up - all by itself."
+      TKB=$(du -sk "$HOME/.claude/projects" 2>/dev/null | awk '{print $1}')
+      L  ""
+      GL "  ● heartbeat: agent transcript ${TKB:-0} KB and growing"
+      ;;
+    finish)
+      header 4
+      BL "  WHAT IS HAPPENING NOW"
+      L  "    The agent is DONE - the FINISH script is wrapping the run:"
+      L  "    dev server starting, Safari opening the finished app."
+      L  ""
+      if grep -q "acceptance_tests_shown" "$TLOG" 2>/dev/null && [ -s "$HOME/tta/acceptance.txt" ]; then
+        PL "  ▶▶ KEY THESE INTO THE APP NOW - same battery every run ◀◀"
+        L  ""
+        while IFS= read -r tln; do L "     $tln"; done < "$HOME/tta/acceptance.txt"
+        L  ""
+        BL "    Done with all 8? Press Return in the FINISH window -"
+        BL "    the recording stops and everything finalizes."
+      else
+        L  "    The uniform acceptance battery will appear RIGHT HERE"
+        L  "    in a moment - you will key it into the app on camera."
+      fi
       ;;
     wrapup)
       header 4
@@ -204,8 +229,10 @@ while :; do
       header 4
       GL "  ✔ ALL DONE - THE RUN IS COMPLETE"
       L  ""
-      L  "    The end time is stamped and the recording is finalized"
-      L  "    (proof was printed where you ran end-run.sh)."
+      RKB=$(du -sk "$HOME/tta/recording.mov" 2>/dev/null | awk '{print $1}')
+      NST=$(ls "$HOME/tta/stills" 2>/dev/null | wc -l | tr -d ' ')
+      L  "    Captured: recording $(( ${RKB:-0} / 1024 )) MB · ${NST:-0} stills"
+      L  "    (the end time is stamped; the recording is finalized)."
       L  ""
       L  "    Next, on the VM HOST (not inside this VM):"
       BL "      cd ~/tta-runs/staging && ./export-run.sh run-$RUN_ID $RUN_ID"
