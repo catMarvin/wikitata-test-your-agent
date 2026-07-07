@@ -49,7 +49,7 @@ START=$(date +%s)
       r1="$r1$a"; r2="$r2$b"; r3="$r3$c"; r4="$r4$d"; r5="$r5$e"
       i=$((i+1))
     done
-    printf '\033[7;1H\033[2K  RECORDING — ELAPSED\n\033[2K\n\033[2K  %s\n\033[2K  %s\n\033[2K  %s\n\033[2K  %s\n\033[2K  %s\n' \
+    printf '\033[7;1H\033[2K  RECORDING — ELAPSED TIME SHOWN HERE:\n\033[2K\n\033[2K  %s\n\033[2K  %s\n\033[2K  %s\n\033[2K  %s\n\033[2K  %s\n\033[2K\n\033[2K  When testing is complete, stop this recording:\n\033[2K  click this window and press Ctrl-C\n\033[2K  (or run the run-end line in the main Terminal).\n' \
       "$r1" "$r2" "$r3" "$r4" "$r5"
     sleep 1
   done
