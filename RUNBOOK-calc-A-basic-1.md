@@ -80,7 +80,7 @@ The stills camera from Step 4 is automatic; the video recording starts with one 
 
 1. In the VM's Terminal, paste this **one line** and press **Return** — it records the **entire screen** to a file, no QuickTime, no clicking, nothing to aim:
    ```bash
-   [ -f ~/tta/rec.pid ] && kill -INT $(cat ~/tta/rec.pid) 2>/dev/null; { screencapture -v -x ~/tta/recording.mov >/dev/null 2>&1 & echo $! > ~/tta/rec.pid; }; sleep 2; ls -l ~/tta/recording.mov && tl recording_started && echo RECORDING
+   [ -f ~/tta/rec.pid ] && kill -INT $(cat ~/tta/rec.pid) 2>/dev/null; { screencapture -v -x ~/tta/recording.mov >/dev/null 2>&1 & echo $! > ~/tta/rec.pid; }; sleep 2; ls -l ~/tta/recording.mov && { tl recording_started 2>/dev/null || true; } && echo RECORDING
    ```
 2. **First time only:** macOS may ask Screen Recording permission for Terminal — click **Allow** (open System Settings and switch it on if asked), then **paste the same line again**. Re-pasting is always safe: the line stops any previous recorder before starting a new one.
 

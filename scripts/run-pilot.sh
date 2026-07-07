@@ -107,7 +107,7 @@ cat <<EOF
     instrumented runs) — paste this ONE line in the VM's Terminal;
     no QuickTime, no clicking, records the entire screen:
 
-      [ -f ~/tta/rec.pid ] && kill -INT \$(cat ~/tta/rec.pid) 2>/dev/null; { screencapture -v -x ~/tta/recording.mov >/dev/null 2>&1 & echo \$! > ~/tta/rec.pid; }; sleep 2; ls -l ~/tta/recording.mov && tl recording_started && echo RECORDING
+      [ -f ~/tta/rec.pid ] && kill -INT \$(cat ~/tta/rec.pid) 2>/dev/null; { screencapture -v -x ~/tta/recording.mov >/dev/null 2>&1 & echo \$! > ~/tta/rec.pid; }; sleep 2; ls -l ~/tta/recording.mov && { tl recording_started 2>/dev/null || true; } && echo RECORDING
 
     You should see RECORDING and the file listed. FIRST TIME ONLY, macOS
     may ask Screen Recording permission for Terminal — approve it, then
