@@ -11,16 +11,17 @@
 #   WRAP-UP  the screen recording stopped -> show the end-run step
 #   DONE     run_end stamped -> export instructions
 #
-# The "DO THIS NOW" box PULSES gently (~1s bold <-> reverse). No fast blink.
-# Painting is absolute-positioned (same discipline as record-screen.sh), so
-# scrolling soup is impossible at any window size; text re-wraps to the
-# measured width every tick.
+# ASCII-ENHANCED: block-graphic frames (═ ║ ╔ ╝), ANSI color (cyan structure,
+# green done, highlighter-yellow action). The "DO THIS NOW" box PULSES gently
+# (~1s highlighter-on <-> bold, no fast blink). Painting is absolute-
+# positioned; lines are sliced to the window width CHARACTER-wise (block
+# glyphs are multibyte), so scrolling soup is impossible at any size.
 #
 # Unchanged duties: puts the startup instruction ON THE CLIPBOARD and stamps
 # guide_opened_clipboard_loaded into the timing log.
 #
 # Usage: run-guide.sh [project] [run-id]   (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.12"
+HARNESS_VERSION="1.6.13"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
@@ -28,6 +29,7 @@ RAW="https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main"
 INSTR="$HOME/tta/startup-instruction.txt"
 TLOG="$HOME/tta/run-times.log"
 MARK="$HOME/tta/.claude-launch.marker"
+export LANG="${LANG:-en_US.UTF-8}"
 
 mkdir -p "$HOME/tta"
 # offline-first: vm-setup already staged the instruction; network is a fallback only
@@ -49,27 +51,32 @@ STATE=launch
 LIVE_AT=0
 TICK=0
 
-# Panel line queue: L = normal, BL = bold, PL = pulsing (the DO-THIS-NOW box).
+# Panel line queue. Attributes:
+#   n normal · b bold · c cyan-bold (structure) · g green-bold (done/live-ok)
+#   h steady highlighter (black on yellow)
+#   p pulsing highlighter (yellow)  · q pulsing highlighter (green)
 L()  { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=n; }
 BL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=b; }
+CL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=c; }
+GL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=g; }
+HL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=h; }
 PL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=p; }
+QL() { LINES[${#LINES[@]}]="$1"; ATTRS[${#ATTRS[@]}]=q; }
 
 header() { # $1 = current phase 1..4 for the tracker
-  local out="  " i=1 name mark
+  local i=1 name
   L ""
-  BL " ================================================================"
-  BL "  wikiTaTa TEST YOUR AGENT - RUN GUIDE"
-  L  "  run: $RUN_ID  -  harness v$HARNESS_VERSION ($SELF_SHA)"
-  BL " ================================================================"
+  CL " ╔══════════════════════════════════════════════════════════════╗"
+  CL " ║   wikiTaTa TEST YOUR AGENT ▪ RUN GUIDE                        ║"
+  CL " ╚══════════════════════════════════════════════════════════════╝"
+  L  "   run: $RUN_ID  ·  harness v$HARNESS_VERSION ($SELF_SHA)"
   L ""
-  for name in "LAUNCH" "PASTE" "LIVE-RUN" "WRAP-UP"; do
-    if [ "$i" -lt "$1" ]; then mark="[x]"
-    elif [ "$i" -eq "$1" ]; then mark="[>]"
-    else mark="[ ]"; fi
-    out="$out$mark $name   "
+  for name in "LAUNCH THE AGENT" "PASTE THE INSTRUCTION" "LIVE RUN (persona: BASIC)" "WRAP-UP"; do
+    if [ "$i" -lt "$1" ]; then GL "     ✔ $name"
+    elif [ "$i" -eq "$1" ]; then HL "     ▶ $name "
+    else L "     ▷ $name"; fi
     i=$((i+1))
   done
-  BL "$out"
   L ""
 }
 
@@ -78,7 +85,6 @@ while :; do
   P=$(( (TICK / 3) % 2 ))                       # gentle pulse: ~0.9s per half
   COLS=$(tput cols 2>/dev/null); [ -n "$COLS" ] || COLS=80
   ROWS=$(tput lines 2>/dev/null); [ -n "$ROWS" ] || ROWS=24
-  TW=$(( COLS - 1 ))
 
   # ---- advance the state machine from the run's real signals ----
   if grep -q "run_end" "$TLOG" 2>/dev/null; then
@@ -114,9 +120,9 @@ while :; do
       L  "    The wizard in the MAIN window (left) is ready to launch"
       L  "    Claude Code - the agent you are testing."
       L  ""
-      PL "  +-------------------------------------------------------------+"
-      PL "  |  DO THIS NOW:  go to the MAIN window and PRESS RETURN       |"
-      PL "  +-------------------------------------------------------------+"
+      PL "  ╔══════════════════════════════════════════════════════════╗"
+      PL "  ║  DO THIS NOW:  go to the MAIN window and PRESS RETURN     ║"
+      PL "  ╚══════════════════════════════════════════════════════════╝"
       L  ""
       L  "    That Return launches the agent. No login is needed."
       L  "    This guide notices by itself and shows your next move."
@@ -129,10 +135,10 @@ while :; do
       BL "  WHAT IS HAPPENING NOW"
       L  "    Claude Code is starting in the MAIN window (left)."
       L  ""
-      PL "  +-------------------------------------------------------------+"
-      PL "  |  DO THIS NOW:  click into Claude Code, press Command+V,     |"
-      PL "  |                then press Return.                           |"
-      PL "  +-------------------------------------------------------------+"
+      PL "  ╔══════════════════════════════════════════════════════════╗"
+      PL "  ║  DO THIS NOW:  click into Claude Code, press Command+V,  ║"
+      PL "  ║                then press Return.                        ║"
+      PL "  ╚══════════════════════════════════════════════════════════╝"
       L  ""
       BL "    The moment you press Return, the run is LIVE and timed."
       L  ""
@@ -143,14 +149,14 @@ while :; do
       S=$(( $(date +%s) - LIVE_AT ))
       ET="$(printf %02d $((S/60))):$(printf %02d $((S%60)))"
       header 3
-      PL "  <<< THE RUN IS LIVE - elapsed $ET - your persona: BASIC >>>"
+      QL "  ▶▶ THE RUN IS LIVE - elapsed $ET - your persona: BASIC ◀◀ "
       L  ""
       BL "  YOUR ONLY MOVES WHILE THE RUN IS LIVE:"
-      L  "    - Agent asks a question?   Shortest sensible answer."
-      L  "    - Permission prompt?       Approve it. That is normal use."
-      L  "    - NEVER suggest features, tools, designs, or approaches."
-      L  "    - Agent idle ~60s with no question?  Type exactly:  continue"
-      L  "    - Jot down anything you type, with a rough time."
+      L  "    ▪ Agent asks a question?   Shortest sensible answer."
+      L  "    ▪ Permission prompt?       Approve it. That is normal use."
+      L  "    ▪ NEVER suggest features, tools, designs, or approaches."
+      L  "    ▪ Agent idle ~60s with no question?  Type exactly:  continue"
+      L  "    ▪ Jot down anything you type, with a rough time."
       L  ""
       L  "  THE RUN ENDS when the agent declares done - or at 45:00,"
       L  "  whichever comes first. Then stop the recording:"
@@ -162,17 +168,17 @@ while :; do
       BL "  WHAT IS HAPPENING NOW"
       L  "    The screen recording has stopped."
       L  ""
-      PL "  +-------------------------------------------------------------+"
-      PL "  |  DO THIS NOW:  open a NEW Terminal window (Command+N)       |"
-      PL "  |                and run:   ~/tta/end-run.sh                  |"
-      PL "  +-------------------------------------------------------------+"
+      PL "  ╔══════════════════════════════════════════════════════════╗"
+      PL "  ║  DO THIS NOW:  open a NEW Terminal window (Command+N)    ║"
+      PL "  ║                and run:   ~/tta/end-run.sh               ║"
+      PL "  ╚══════════════════════════════════════════════════════════╝"
       L  ""
       L  "    That stamps the end time, finalizes the recording file,"
       L  "    and prints the proof + the export command."
       ;;
     done)
       header 4
-      BL "  ALL DONE - THE RUN IS COMPLETE"
+      GL "  ✔ ALL DONE - THE RUN IS COMPLETE"
       L  ""
       L  "    The end time is stamped and the recording is finalized"
       L  "    (proof was printed where you ran end-run.sh)."
@@ -184,17 +190,23 @@ while :; do
       ;;
   esac
 
-  # ---- paint: absolute-position every line, truncate to width, no newlines ----
+  # ---- paint: absolute-position every line, char-wise slice, no newlines ----
   row=1
   i=0
   while [ "$i" -lt "${#LINES[@]}" ]; do
     [ "$row" -gt "$ROWS" ] && break
+    line="${LINES[$i]}"
+    line="${line:0:$COLS}"
     case "${ATTRS[$i]}" in
-      p) if [ "$P" -eq 1 ]; then A='\033[1;7m'; else A='\033[1m'; fi;;
+      c) A='\033[1;36m';;
+      g) A='\033[1;32m';;
+      h) A='\033[1;30;43m';;
+      p) if [ "$P" -eq 1 ]; then A='\033[1;30;43m'; else A='\033[1m'; fi;;
+      q) if [ "$P" -eq 1 ]; then A='\033[1;30;42m'; else A='\033[1;32m'; fi;;
       b) A='\033[1m';;
       *) A='';;
     esac
-    printf '\033[%d;1H\033[2K'"$A"'%.*s\033[0m' "$row" "$TW" "${LINES[$i]}"
+    printf '\033[%d;1H\033[2K'"$A"'%s\033[0m' "$row" "$line"
     row=$((row+1))
     i=$((i+1))
   done

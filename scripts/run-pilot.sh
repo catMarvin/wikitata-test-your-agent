@@ -26,7 +26,7 @@
 #   ./run-pilot.sh <project> <golden-image> <run-id>
 set -euo pipefail
 
-HARNESS_VERSION="1.6.12"
+HARNESS_VERSION="1.6.13"
 PROJECT="${1:-calculator}"
 GOLDEN="${2:-tta-base-a}"
 RUN_ID="${3:-calc-A-basic-1}"
