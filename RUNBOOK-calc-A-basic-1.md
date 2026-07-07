@@ -121,10 +121,8 @@ The pasted text is exactly this — shown here for reference only; you never nee
 
 ### Step 7. Watch. The run ends two ways
 
-- The agent declares it is **done**, or
-- **45 minutes** pass since the paste — then you stop it regardless.
-
-When it ends: click the **recording window** (bottom-right) and press **Ctrl-C** — the guide window then switches to its wrap-up panel by itself.
+- The agent declares it is **done** → open a **new** Terminal window (**⌘N**) and run `~/tta/finish.sh` — it starts the dev server, puts the finished app on camera in Safari, then stops the recording and wraps up by itself.
+- **45 minutes** pass since the paste → the recording window (bottom-right) starts **pulsing CLICK HERE**: click it and press **Ctrl-C**, then follow the guide's wrap-up panel.
 
 ---
 

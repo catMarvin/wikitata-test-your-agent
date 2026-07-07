@@ -21,7 +21,7 @@
 # guide_opened_clipboard_loaded into the timing log.
 #
 # Usage: run-guide.sh [project] [run-id]   (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.19"
+HARNESS_VERSION="1.6.20"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
@@ -180,9 +180,11 @@ while :; do
       L  "    ▪ Jot down anything you type, with a rough time."
       L  ""
       L  "  THE RUN ENDS when the agent declares done - or at 45:00,"
-      L  "  whichever comes first. Then stop the recording:"
-      L  "    click the recording window (bottom right), press Ctrl-C."
-      L  "  This guide will show the wrap-up steps by itself."
+      L  "  whichever comes first. When the agent says it is DONE:"
+      BL "    open a NEW Terminal window (Command+N) and run:"
+      BL "      ~/tta/finish.sh"
+      L  "  It puts the finished app on camera, then stops the"
+      L  "  recording and wraps up - all by itself."
       ;;
     wrapup)
       header 4

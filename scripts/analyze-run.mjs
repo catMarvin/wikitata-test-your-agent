@@ -95,7 +95,10 @@ for (const f of files) {
       const isToolResult = Array.isArray(c) && c.some(b => b?.type === 'tool_result');
       if (!isToolResult) {
         userTurns++;
-        if (firstUserTs === null && !Number.isNaN(ts)) firstUserTs = ts;
+        // GLOBAL earliest across ALL transcript files — file scan order is
+        // arbitrary (a subagent file scanned first clocked S718's run at
+        // 9.8 min when the real paste was 7 min earlier in the main file)
+        if (!Number.isNaN(ts) && (firstUserTs === null || ts < firstUserTs)) firstUserTs = ts;
         if (!Number.isNaN(ts)) humanInputTs.push(ts);
       }
     }
