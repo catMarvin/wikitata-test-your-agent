@@ -94,6 +94,7 @@ cat <<EOF
  1. Inside the VM: Cmd-Space, type Terminal, Return. Paste this ONE block
     (downloads + unpacks the challenge, starts the stills loop + timing log):
 
+    echo admin | sudo -S scutil --set HostName the-wikitata-test-your-agent-virtualMacTest 2>/dev/null; \\
     mkdir -p ~/tta ~/challenge && cd ~ && \\
     tl(){ printf '%s\\tguest\\t%s\\n' "\$(date -u +%Y-%m-%dT%H:%M:%SZ)" "\$1" >> ~/tta/run-times.log; } && \\
     tl guest_setup_start && \\
