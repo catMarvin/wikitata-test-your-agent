@@ -4,7 +4,7 @@
 # fresh (block-graphic header + colored step tracker + ONE pulsing
 # highlighter "PRESS RETURN" action) — the operator never sees a scrollback
 # wall, and the recording only ever shows the current step.
-HARNESS_VERSION="1.6.21"
+HARNESS_VERSION="1.6.22"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 ATTNF="$HOME/tta/attention"
 export LANG="${LANG:-en_US.UTF-8}"
@@ -55,7 +55,7 @@ page_top() { # $1 = current step 1..4 (0 = welcome page, no tracker)
   say ""
   if [ "$1" -gt 0 ]; then
     local i=1 name
-    for name in "stills camera (one photo every 30s)" \
+    for name in "stills camera (one photo every 10s)" \
                 "screen recording of the whole run" \
                 "run guide + instruction on the clipboard" \
                 "launch the agent (Claude Code)"; do
@@ -171,7 +171,7 @@ say "   exactly ONE thing: when the pulsing highlighter says PRESS"
 say "   RETURN, you press the Return key. That is it."
 say ""
 say "   What it sets up, in order:"
-say "     1. stills camera - one PNG of the screen every 30 seconds"
+say "     1. stills camera - one PNG of the screen every 10 seconds"
 say "        (these become the flip-book replay of your run);"
 say "     2. screen recording - a movie of the ENTIRE screen"
 say "        (a clock window shows you it is live);"
@@ -195,13 +195,13 @@ if [ -n "$(ls "$HOME/tta/stills/" 2>/dev/null)" ]; then
   rm -f "$HOME/tta/manifest.json"
 fi
 [ -s "$HOME/tta/recording.mov" ] && mv "$HOME/tta/recording.mov" "$HOME/tta/recording.prev.$NOWS.mov"
-{ RUN_ID="$RUN_ID" INTERVAL=30 "$HOME/tta/capture-stills.sh" > "$HOME/tta/stills.log" 2>&1 & }
+{ RUN_ID="$RUN_ID" INTERVAL=10 "$HOME/tta/capture-stills.sh" > "$HOME/tta/stills.log" 2>&1 & }
 "$HOME/tta/tl" stills_started
 
 # ---- PAGE: step 2, screen recording ----
 page_top 2
 grn "   STEP 1 needed nothing from you - the stills camera is already"
-grn "   rolling (one photo of the screen every 30 seconds)."
+grn "   rolling (one photo of the screen every 10 seconds)."
 press_return "▶▶ PRESS RETURN - this will START THE SCREEN RECORDING ◀◀" \
              "A clock window opens bottom right; the whole screen records" \
              "until the end of the run."
@@ -235,6 +235,10 @@ say ""
 say "   Next, the agent (Claude Code) launches RIGHT HERE. When it"
 say "   opens: press Command+V, then Return."
 bold "   ▶▶ THAT Return starts the clock. BASIC persona from then on. ◀◀"
+say ""
+say "   NOTE: permissions are PRE-APPROVED for this sandbox (the agent"
+say "   runs with skip-permissions and will never stop to ask - that is"
+say "   the point of the test: we open it up and just let it GO)."
 press_return "▶▶ PRESS RETURN - this will LAUNCH THE AGENT (Claude Code) ◀◀"
 printf '\033[?25h\033[0m\033[2J\033[H'
 # Claude Code owns this window from here — hand the suite's ONE pulse to the guide

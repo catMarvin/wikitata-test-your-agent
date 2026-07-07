@@ -4,12 +4,12 @@
 # no Ctrl-C hunt. It:
 #   1. stamps agent_done;
 #   2. starts the project's dev server (npm run dev, preview fallback) and
-#      opens Safari on it — the finished app gets TTA_SHOW_SECS (default 20s)
-#      ON CAMERA;
+#      opens Safari on it, paints the UNIFORM 8-test acceptance battery
+#      (performed on camera; Return-gated);
 #   3. stops the recording, stamps run_end, prints proof + export command
 #      (via end-run.sh — ONE wrap path).
 # Run it in a NEW Terminal window (Command+N) — Claude Code owns MAIN.
-HARNESS_VERSION="1.6.21"
+HARNESS_VERSION="1.6.22"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 SHOW_SECS="${TTA_SHOW_SECS:-20}"
 tl() { printf '%s\tguest\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" >> "$HOME/tta/run-times.log"; }
@@ -38,18 +38,45 @@ fi
 
 if [ -n "$URL" ]; then
   echo "  opening Safari on $URL"
-  printf '\033[1;32m  the finished app is ON CAMERA for %s seconds...\033[0m\n' "$SHOW_SECS"
   open -a Safari "$URL"
   tl "app_on_camera $URL"
-  sleep "$SHOW_SECS"
+  SHOWCASE=1
 elif [ -f index.html ]; then
   echo "  no dev server found - opening index.html directly"
   open -a Safari "index.html"
   tl app_on_camera_static
-  sleep "$SHOW_SECS"
+  SHOWCASE=1
 else
   echo "  WARNING: nothing to open (no dev/preview script, no index.html) - skipping showcase"
   tl finish_no_showcase
+  SHOWCASE=0
+fi
+
+if [ "$SHOWCASE" = "1" ]; then
+  # the UNIFORM acceptance battery — identical for every creation, performed
+  # ON CAMERA so the tape + button presses are part of every recording
+  echo ""
+  printf '\033[1;36m ╔════════════════════════════════════════════════════════════╗\033[0m\n'
+  printf '\033[1;36m ║   UNIFORM ACCEPTANCE TEST - perform these IN the app now    ║\033[0m\n'
+  printf '\033[1;36m ╚════════════════════════════════════════════════════════════╝\033[0m\n'
+  echo "   Key each one in; watch the tape record it. Same battery for"
+  echo "   every creation, so runs stay comparable."
+  echo ""
+  printf '\033[1m   BASIC\033[0m\n'
+  echo "     T1   1 * 2 * 3 + 4 - 5        expect 5"
+  echo "     T2   12.5 + 87.5              expect 100"
+  echo "     T3   22 / 7                   expect 3.1428571..."
+  echo "     T4   ( 8 + 2 ) * ( 6 - 1 )    expect 50"
+  echo "     T5   100 - 250                expect -150"
+  printf '\033[1m   SCIENTIFIC\033[0m\n'
+  echo "     T6   sqrt(144)                expect 12"
+  echo "     T7   2 ^ 10                   expect 1024"
+  echo "     T8   sin(30 deg)              expect 0.5"
+  echo ""
+  printf '\033[1;30;43m   PRESS RETURN here when the tests are done - recording stops. \033[0m\n'
+  tl acceptance_tests_shown
+  read -r || true
+  tl acceptance_tests_done
 fi
 
 echo ""
