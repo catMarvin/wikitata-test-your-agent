@@ -4,7 +4,7 @@
 # fresh (block-graphic header + colored step tracker + ONE pulsing
 # highlighter "PRESS RETURN" action) — the operator never sees a scrollback
 # wall, and the recording only ever shows the current step.
-HARNESS_VERSION="1.6.15"
+HARNESS_VERSION="1.6.16"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 ATTNF="$HOME/tta/attention"
 export LANG="${LANG:-en_US.UTF-8}"
@@ -102,22 +102,29 @@ say "     3  Pro (white/black)       8  Grass"
 say "     4  Ocean (blue)            9  Silver Aerogel (light)"
 say "     5  Man Page (light)"
 say ""
-bold "   TYPE one number now - or press Return to keep the default."
+bold "   TYPE a number to TRY a theme - it applies INSTANTLY so you can"
+bold "   see it. Try as many as you like; press Return to KEEP the one"
+bold "   you are looking at."
+say ""
 THEME=""
-read -rsn1 CH || { printf '\033[?25h\033[0m\n'; exit 1; }
-case "$CH" in
-  1) THEME="Basic";;      2) THEME="Homebrew";;  3) THEME="Pro";;
-  4) THEME="Ocean";;      5) THEME="Man Page";;  6) THEME="Novel";;
-  7) THEME="Red Sands";;  8) THEME="Grass";;     9) THEME="Silver Aerogel";;
-  *) THEME="";;
-esac
+SROW=$ROW
+while :; do
+  read -rsn1 CH || { printf '\033[?25h\033[0m\n'; exit 1; }
+  case "$CH" in
+    1) T2="Basic";;      2) T2="Homebrew";;  3) T2="Pro";;
+    4) T2="Ocean";;      5) T2="Man Page";;  6) T2="Novel";;
+    7) T2="Red Sands";;  8) T2="Grass";;     9) T2="Silver Aerogel";;
+    "") break;;
+    *) T2="";;
+  esac
+  if [ -n "$T2" ]; then
+    THEME="$T2"
+    apply_theme "$THEME"
+    printf '\033[%d;1H\033[2K\033[1;32m   ✔ now showing: %s — Return to KEEP it, or try another number\033[0m' "$SROW" "$THEME"
+  fi
+done
 printf "THEME='%s'\n" "$THEME" > "$HOME/tta/theme.conf"
-if [ -n "$THEME" ]; then
-  apply_theme "$THEME"
-  grn "   ✔ color scheme: $THEME (the other windows will match)"
-else
-  grn "   ✔ keeping the default colors"
-fi
+printf '\033[%d;1H\033[2K\033[1;32m   ✔ color scheme locked: %s (the other windows will match)\033[0m\n' "$SROW" "${THEME:-default}"
 sleep 1
 
 # ---- PAGE: what this wizard does ----
