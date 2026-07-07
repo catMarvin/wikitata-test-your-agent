@@ -21,7 +21,7 @@
 # guide_opened_clipboard_loaded into the timing log.
 #
 # Usage: run-guide.sh [project] [run-id]   (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.16"
+HARNESS_VERSION="1.6.17"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"

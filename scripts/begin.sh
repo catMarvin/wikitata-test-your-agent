@@ -4,13 +4,21 @@
 # fresh (block-graphic header + colored step tracker + ONE pulsing
 # highlighter "PRESS RETURN" action) — the operator never sees a scrollback
 # wall, and the recording only ever shows the current step.
-HARNESS_VERSION="1.6.16"
+HARNESS_VERSION="1.6.17"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 ATTNF="$HOME/tta/attention"
 export LANG="${LANG:-en_US.UTF-8}"
 
-apply_theme() { # apply a stock macOS Terminal profile to the FRONT window
-  [ -n "$1" ] && osascript -e "tell application \"Terminal\" to set current settings of front window to settings set \"$1\"" >/dev/null 2>&1 || true
+apply_theme() { # apply a stock macOS Terminal profile to the FRONT window,
+  # then RE-ASSERT our font size + bounds (profiles carry their own fonts —
+  # letting one land would reflow the window and shred absolute-row paints)
+  [ -n "$1" ] || return 0
+  osascript -e "tell application \"Terminal\" to set current settings of front window to settings set \"$1\"" >/dev/null 2>&1 || true
+  osascript -e 'tell application "Finder" to set db to bounds of window of desktop' \
+    -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' \
+    -e 'tell application "Terminal" to set font size of selected tab of front window to 16' \
+    -e 'tell application "Terminal" to set bounds of front window to {0, 25, sw * 27 div 50, sh - 80}' \
+    >/dev/null 2>&1 || true
 }
 
 focus_main() {
@@ -42,6 +50,7 @@ page_top() { # $1 = current step 1..4 (0 = welcome page, no tracker)
   cy  " ╔══════════════════════════════════════════════════════════════════╗"
   cy  " ║   wikiTaTa \"Test Your Agent\" ▪ guided run wizard                  ║"
   cy  " ╚══════════════════════════════════════════════════════════════════╝"
+  say ""
   say "   run: $RUN_ID  ·  harness v$HARNESS_VERSION"
   say ""
   if [ "$1" -gt 0 ]; then
@@ -83,31 +92,36 @@ press_return() { # $1 pulses (~1s highlighter <-> bold) until Return; $2.. below
 printf '\033[?25l'
 trap 'printf "\033[?25h\033[0m"; [ -n "$PULSER" ] && kill "$PULSER" 2>/dev/null' EXIT
 
-# ---- PAGE: welcome + color scheme ----
-page_top 0
-cy  "   █     █ ██████ █       █████  ████  █     █ ██████"
-cy  "   █     █ █      █      █      █    █ ██   ██ █"
-cy  "   █  █  █ █████  █      █      █    █ █ █ █ █ █████"
-cy  "   █ █ █ █ █      █      █      █    █ █  █  █ █"
-cy  "    █   █  ██████ ██████  █████  ████  █     █ ██████"
-say ""
-bold "   ...to the wikiTaTa \"Test Your Agent\" testing suite."
-say ""
-bold "   FIRST - pick a color scheme for these windows"
-say  "   (the classic macOS Terminal themes):"
-say ""
-say "     1  Basic (default)         6  Novel (light)"
-say "     2  Homebrew (green/black)  7  Red Sands"
-say "     3  Pro (white/black)       8  Grass"
-say "     4  Ocean (blue)            9  Silver Aerogel (light)"
-say "     5  Man Page (light)"
-say ""
-bold "   TYPE a number to TRY a theme - it applies INSTANTLY so you can"
-bold "   see it. Try as many as you like; press Return to KEEP the one"
-bold "   you are looking at."
-say ""
+# ---- PAGE: welcome + color scheme (repainted WHOLE after every try —
+# applying a profile can reflow the window, so single-row patching is unsafe:
+# it left duplicate status lines on Todd's screen)
+theme_page() { # $1 = status line ("" = none yet)
+  page_top 0
+  cy  "   █     █ ██████ █       █████  ████  █     █ ██████"
+  cy  "   █     █ █      █      █      █    █ ██   ██ █"
+  cy  "   █  █  █ █████  █      █      █    █ █ █ █ █ █████"
+  cy  "   █ █ █ █ █      █      █      █    █ █  █  █ █"
+  cy  "    █   █  ██████ ██████  █████  ████  █     █ ██████"
+  say ""
+  bold "   ...to the wikiTaTa \"Test Your Agent\" testing suite."
+  say ""
+  bold "   FIRST - pick a color scheme for these windows"
+  say  "   (the classic macOS Terminal themes):"
+  say ""
+  say "     1  Basic (default)         6  Novel (light)"
+  say "     2  Homebrew (green/black)  7  Red Sands"
+  say "     3  Pro (white/black)       8  Grass"
+  say "     4  Ocean (blue)            9  Silver Aerogel (light)"
+  say "     5  Man Page (light)"
+  say ""
+  bold "   TYPE a number to TRY a theme - it applies INSTANTLY so you can"
+  bold "   see it. Try as many as you like; press Return to KEEP the one"
+  bold "   you are looking at."
+  say ""
+  [ -n "$1" ] && grn "$1"
+}
 THEME=""
-SROW=$ROW
+theme_page ""
 while :; do
   read -rsn1 CH || { printf '\033[?25h\033[0m\n'; exit 1; }
   case "$CH" in
@@ -120,11 +134,11 @@ while :; do
   if [ -n "$T2" ]; then
     THEME="$T2"
     apply_theme "$THEME"
-    printf '\033[%d;1H\033[2K\033[1;32m   ✔ now showing: %s — Return to KEEP it, or try another number\033[0m' "$SROW" "$THEME"
+    theme_page "   ✔ now showing: $THEME — Return to KEEP it, or try another number"
   fi
 done
 printf "THEME='%s'\n" "$THEME" > "$HOME/tta/theme.conf"
-printf '\033[%d;1H\033[2K\033[1;32m   ✔ color scheme locked: %s (the other windows will match)\033[0m\n' "$SROW" "${THEME:-default}"
+theme_page "   ✔ color scheme locked: ${THEME:-default} (the other windows will match)"
 sleep 1
 
 # ---- PAGE: what this wizard does ----

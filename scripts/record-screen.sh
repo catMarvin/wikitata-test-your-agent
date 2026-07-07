@@ -28,7 +28,7 @@
 # window switches to the stopped banner with the file listing as proof.
 #
 # Usage: record-screen.sh [output.mov]   (default ~/tta/recording.mov)
-HARNESS_VERSION="1.6.16"
+HARNESS_VERSION="1.6.17"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 OUT="${1:-$HOME/tta/recording.mov}"
 ATTNF="$HOME/tta/attention"
