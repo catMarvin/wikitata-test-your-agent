@@ -26,7 +26,7 @@
 #   ./run-pilot.sh <project> <golden-image> <run-id>
 set -euo pipefail
 
-HARNESS_VERSION="1.6.1"
+HARNESS_VERSION="1.6.2"
 PROJECT="${1:-calculator}"
 GOLDEN="${2:-tta-base-a}"
 RUN_ID="${3:-calc-A-basic-1}"
@@ -89,48 +89,29 @@ cat <<EOF
 ==============================================================================
  NEXT: the VM window is about to open (this terminal stays attached to the
  VM — normal; your prompt returns when the VM shuts down). Everything below
- happens INSIDE that window: click into it — from then on your keyboard and
- mouse control the guest Mac.
+ happens INSIDE that window: click into it, open Terminal (Cmd-Space,
+ "Terminal", Return), then run these — ONE SHORT LINE PER STEP:
 
- 1. Inside the VM: Cmd-Space, type Terminal, Return. Paste this ONE block
-    (downloads + unpacks the challenge, starts the stills loop + timing log):
+ 1. Set everything up (challenge, stills camera, timing log, run tools):
 
-    echo admin | sudo -S scutil --set HostName wikiTaTa-TestYourAgent-VirtualMacTest 2>/dev/null; \\
-    mkdir -p ~/tta ~/challenge && cd ~ && \\
-    tl(){ printf '%s\\tguest\\t%s\\n' "\$(date -u +%Y-%m-%dT%H:%M:%SZ)" "\$1" >> ~/tta/run-times.log; } && \\
-    tl guest_setup_start && \\
-    curl -fsSLO ${REL}/${PROJECT}-starter.zip && \\
-    unzip -q ~/${PROJECT}-starter.zip -d ~/challenge && tl starter_unpacked && \\
-    curl -fsSL ${RAW}/scripts/capture-stills.sh -o ~/tta/capture-stills.sh && chmod +x ~/tta/capture-stills.sh && \\
-    { RUN_ID=${RUN_ID} INTERVAL=30 ~/tta/capture-stills.sh > ~/tta/stills.log 2>&1 & } && \\
-    { osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set font size of selected tab of front window to 16' -e 'tell application "Terminal" to set bounds of front window to {0, 25, sw * 3 div 5, sh - 80}' >/dev/null 2>&1 || true; } && \\
-    tl stills_started && echo READY
+      curl -fsSL ${RAW}/scripts/vm-setup.sh | bash -s ${PROJECT} ${RUN_ID}
 
- 2. Start the FULL-SCREEN video recording (REQUIRED evidence for
-    instrumented runs). This ONE line opens a dedicated recording window
-    with a live big-digit elapsed clock — clock ticking = recording:
+ 2. Start the screen recording (REQUIRED; it verifies itself — YES/NO):
 
-      curl -fsSL ${RAW}/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set font size of selected tab of front window to 16' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, sh * 11 div 20, sw, sh - 80}' >/dev/null 2>&1 || true; sleep 3; pgrep -x screencapture >/dev/null && echo ">>> YES: RECORDING IS LIVE — continue to the next step <<<" || echo ">>> NO: NOT RECORDING — STOP HERE. Approve the Screen Recording permission (password: admin), then run this step again. Do NOT continue until this says YES. <<<"
+      ~/tta/start-recording.sh
 
-    The line VERIFIES ITSELF: it always ends by printing YES (continue)
-    or NO (stop, approve the permission, paste the same line again).
-    DO NOT continue on NO. Re-check any time later with:
+ 3. Open the run guide (loads the startup instruction onto the clipboard):
 
-      pgrep -x screencapture >/dev/null && echo YES-RECORDING || echo NOT-RECORDING
+      ~/tta/open-guide.sh
 
- 3. Open the RUN GUIDE window — it loads the startup instruction onto
-    the clipboard and walks you through launch + paste + persona rules:
+ 4. Follow the guide: launch the agent, press Command+V, Return.
+    THE CLOCK STARTS AT THAT PASTE.
 
-      curl -fsSL ${RAW}/scripts/run-guide.sh -o ~/tta/run-guide.sh && chmod +x ~/tta/run-guide.sh && osascript -e 'tell application "Terminal" to do script "~/tta/run-guide.sh ${PROJECT} ${RUN_ID}"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set font size of selected tab of front window to 16' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, 25, sw, sh * 11 div 20}' >/dev/null 2>&1 || true
+ AFTER THE RUN (agent done, or 45-min cap):
 
-    Follow its STEP 1 (launch claude) and STEP 2 (Command+V the
-    instruction). The run clock starts at that paste.
+      ~/tta/end-run.sh
 
- AFTER THE RUN (agent done, or 45-min cap): in the VM's main Terminal:
-    tl run_end 2>/dev/null; pkill -INT -x screencapture; sleep 3; ls -l ~/tta/recording.mov
- (stops + finalizes — expect a large file size; the recording window's
- banner disappearing is your visual confirmation), then on the VM host:
-    cd ${STAGE} && ./export-run.sh ${VM} ${RUN_ID}
+ then run the export command it prints, back on the VM host.
 ==============================================================================
 EOF
 

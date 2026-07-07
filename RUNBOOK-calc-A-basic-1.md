@@ -69,18 +69,22 @@ Inside the VM: press **⌘-space**, type `Terminal`, press **Return**.
 
 ### Step 4. Set up the challenge + start the automatic stills camera
 
-The boxed checklist from Step 2 printed a paste-block. Copy that whole block (all lines together) into the VM's Terminal and press **Return**. It downloads the challenge, unpacks it, and starts a camera that snaps the screen every 30 seconds — plus a timing log.
+One short line in the VM's Terminal (also printed by the launcher's checklist). It downloads the challenge, starts the 30-second stills camera and the timing log, installs the run tools into `~/tta`, and docks this window to the left:
 
-✅ **You should now see:** the word `READY` printed, then the prompt back.
+```bash
+curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/vm-setup.sh | bash -s calculator calc-A-basic-1
+```
+
+✅ **You should now see:** a short narrated list ending in `READY — harness v1.6.2` and `NEXT: ~/tta/start-recording.sh`.
 ❌ If you see `command not found` or an error mentioning `curl` or `unzip`: stop, note the exact text, and report it.
 
 ### Step 5. Start the screen recording — MANUAL. This is the step people miss.
 
 The stills camera from Step 4 is automatic; the video recording starts with one more paste. *(Required for instrumented runs — it is a mandatory evidence witness. Casual challengers outside the harness: recommended, not required — see CAPTURE.md.)*
 
-1. In the VM's Terminal, paste this **one line** and press **Return** — it opens a **dedicated recording window** with a live big-digit elapsed clock, recording the **entire screen** (no QuickTime, no clicking, nothing to aim):
+1. In the VM's Terminal, run — it opens the recording window (full screen capture + live elapsed clock, docked bottom-right) and verifies itself:
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set font size of selected tab of front window to 16' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, sh * 11 div 20, sw, sh - 80}' >/dev/null 2>&1 || true; sleep 3; pgrep -x screencapture >/dev/null && echo ">>> YES: RECORDING IS LIVE — continue to the next step <<<" || echo ">>> NO: NOT RECORDING — STOP HERE. Approve the Screen Recording permission (password: admin), then run this step again. Do NOT continue until this says YES. <<<"
+   ~/tta/start-recording.sh
    ```
 2. **The line verifies itself** — it always ends by telling you which world you are in:
    - `>>> YES: RECORDING IS LIVE — continue to the next step <<<` → go to Step 6.
@@ -99,7 +103,7 @@ The stills camera from Step 4 is automatic; the video recording starts with one 
 In the VM's Terminal, paste this **one line** and press **Return** — it opens a guide window that puts the official startup instruction **directly onto the VM's clipboard** and shows your next moves:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/run-guide.sh -o ~/tta/run-guide.sh && chmod +x ~/tta/run-guide.sh && osascript -e 'tell application "Terminal" to do script "~/tta/run-guide.sh calculator calc-A-basic-1"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set font size of selected tab of front window to 16' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, 25, sw, sh * 11 div 20}' >/dev/null 2>&1 || true
+~/tta/open-guide.sh
 ```
 
 ✅ **You should now see:** a guide window titled "YOUR NEXT MOVES" docked to the **top-right**, confirming the instruction is on the clipboard. The three windows now tile themselves: main Terminal left, guide top-right, recording clock bottom-right. *(First time, macOS may ask to let Terminal control Finder — that's only for window positioning; Allow or Deny, everything works either way.)*
@@ -136,9 +140,9 @@ The pasted text is exactly this — shown here for reference only; you never nee
 
 ### Step 9. Stamp the end + stop the recording (inside the VM)
 
-1. In the VM's main Terminal, paste and press **Return** — stamps the end time, stops the recorder (same as Ctrl-C in the recording window), and shows the finished file:
+1. In the VM's main Terminal, run — stamps the end time, stops + finalizes the recording, and prints the export command:
    ```bash
-   tl run_end 2>/dev/null; pkill -INT -x screencapture; sleep 3; ls -l ~/tta/recording.mov; pgrep -x screencapture >/dev/null && echo ">>> STILL RECORDING?! report this" || echo ">>> RECORDING STOPPED AND SAVED <<<"
+   ~/tta/end-run.sh
    ```
 ✅ **You should now see:** `recording.mov` listed with a large file size, and `>>> RECORDING STOPPED AND SAVED <<<`. The recording window drops back to a prompt — its banner gone is your visual confirmation.
 
