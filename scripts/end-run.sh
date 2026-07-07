@@ -2,7 +2,7 @@
 # end-run.sh — run when the agent is done (or the 45-min cap hits):
 # stamps the end time, stops + finalizes the recording, prints the proof
 # and the export command to run on the VM host.
-HARNESS_VERSION="1.6.5"
+HARNESS_VERSION="1.6.6"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 printf '%s\tguest\trun_end\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$HOME/tta/run-times.log"
 pkill -INT -x screencapture 2>/dev/null
