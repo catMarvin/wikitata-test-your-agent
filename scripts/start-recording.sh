@@ -2,7 +2,7 @@
 # start-recording.sh — opens the recording window (full-screen capture with a
 # live elapsed clock, docked bottom-right) and VERIFIES it, printing an
 # explicit YES-continue / NO-stop verdict.
-HARNESS_VERSION="1.6.27"
+HARNESS_VERSION="1.6.28"
 . "$HOME/tta/theme.conf" 2>/dev/null || THEME=""
 osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"' >/dev/null
 [ -n "$THEME" ] && osascript -e "tell application \"Terminal\" to set current settings of front window to settings set \"$THEME\"" >/dev/null 2>&1

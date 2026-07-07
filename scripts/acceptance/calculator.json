@@ -7,9 +7,9 @@
   "clearBetween": true,
   "read": {
     "selectors": [
-      "[data-testid='display']", "[data-testid='result']", "[data-testid='output']",
-      ".display", ".result", ".output", ".screen", ".calc-display", ".calculator-display",
-      "#display", "#result", "#output", "output"
+      ".display .result", ".calc-display .result", ".calculator-display .result", ".screen .result", "[aria-live] .result", ".display-result",
+      "[data-testid='result']", "[data-testid='display']", "[data-testid='output']",
+      ".result", ".value", ".output", ".screen", "#result", "#display", "#output", "output"
     ],
     "strategy": "prefer-selector-else-largest-numeric"
   },

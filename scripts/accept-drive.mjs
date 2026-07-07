@@ -83,19 +83,34 @@ window.__tta = (function(){
     }
     return {ok:false, hit:null};
   }
+  function inHistory(el){
+    var n = el;
+    while (n && n !== document.body){
+      if (n.tagName === 'LI' || n.tagName === 'UL' || n.tagName === 'OL') return true;
+      var c = (n.getAttribute && n.getAttribute('class')) || '';
+      if (c && /history|tape|past|recent|entries|entry/i.test(c)) return true;
+      n = n.parentElement;
+    }
+    return false;
+  }
   function read(selectors){
+    // Calculators often reuse the same class (e.g. .result) for the LIVE display
+    // AND every entry in a history tape. Exclude anything inside a history/list
+    // ancestor, and take the FIRST (most-specific-selector) live match — not the
+    // last, which was the stale history entry (S721 calc-A-basic-3 frozen-5 bug).
     var cand = [];
     (selectors||[]).forEach(function(s){
       try { document.querySelectorAll(s).forEach(function(el){
+        if (inHistory(el)) return;
         var v = (el.value !== undefined && el.value !== '') ? el.value : el.textContent;
         v = (v||'').trim(); if (v) cand.push(v);
       }); } catch(_){}
     });
-    var chosen = cand.length ? cand[cand.length-1] : null;
+    var chosen = cand.length ? cand[0] : null;
     if (chosen === null){
       var best = null, all = document.querySelectorAll('*');
       for (var i=0;i<all.length;i++){
-        var el = all[i]; if (el.children.length) continue;
+        var el = all[i]; if (el.children.length) continue; if (inHistory(el)) continue;
         var t = (el.textContent||'').trim();
         if (/^-?[0-9][0-9.,]*(e[-+]?[0-9]+)?$/i.test(t)){
           if (!best || t.length > best.length) best = t;

@@ -12,7 +12,7 @@
 #      (via end-run.sh — ONE wrap path).
 # Run it in a NEW Terminal window (Command+N) — Claude Code owns MAIN.
 # Escape hatch: TTA_AUTO_ACCEPT=off forces the old manual Return-gated battery.
-HARNESS_VERSION="1.6.27"
+HARNESS_VERSION="1.6.28"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 SHOW_SECS="${TTA_SHOW_SECS:-20}"
 tl() { printf '%s\tguest\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" >> "$HOME/tta/run-times.log"; }
@@ -96,8 +96,25 @@ if [ "$SHOWCASE" = "1" ]; then
     if node "$HOME/tta/accept-drive.mjs" "$SPEC"; then
       DROVE=1
       tl acceptance_auto_done
+      RES="$HOME/tta/acceptance-results.json"
+      SCORE=$(node -e "try{const r=require('$RES');process.stdout.write(r.passed+'/'+r.total)}catch(e){process.stdout.write('?')}" 2>/dev/null)
+      FAILN=$(node -e "try{const r=require('$RES');process.stdout.write(String(r.total-r.passed))}catch(e){process.stdout.write('0')}" 2>/dev/null)
       echo ""
-      echo "   auto-run complete - results: $HOME/tta/acceptance-results.json"
+      echo "   auto-run complete - $SCORE passed - results: $RES"
+      # LOUD on-fail: a failing battery must be impossible to miss on camera
+      # (S721: a silent 1/8 was missed and the recording ended anyway).
+      if [ "${FAILN:-0}" != "0" ]; then
+        tl "acceptance_battery_FAILED $SCORE"
+        printf '\033[1;41;97m\n'
+        printf '  ##############################################################\n'
+        printf '  #  ACCEPTANCE BATTERY FAILED - %-28s #\n' "$SCORE passed"
+        printf '  #  the app did NOT pass every test - do NOT trust this run    #\n'
+        printf '  ##############################################################\033[0m\n'
+        node -e "try{require('$RES').results.filter(x=>x.status!=='PASS').forEach(x=>console.log('     '+x.id+' '+x.status+'  expected '+x.expect+', got '+x.got))}catch(e){}" 2>/dev/null
+        echo ""
+      else
+        printf '\033[1;42;97m  ✅ ALL %s ACCEPTANCE TESTS PASSED \033[0m\n' "$SCORE"
+      fi
     else
       echo ""
       echo "   (auto-drive unavailable - falling back to MANUAL entry)"
