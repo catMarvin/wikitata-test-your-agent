@@ -26,7 +26,7 @@
 #   ./run-pilot.sh <project> <golden-image> <run-id>
 set -euo pipefail
 
-HARNESS_VERSION="1.6.7"
+HARNESS_VERSION="1.6.8"
 PROJECT="${1:-calculator}"
 GOLDEN="${2:-tta-base-a}"
 RUN_ID="${3:-calc-A-basic-1}"
@@ -96,13 +96,13 @@ cat <<EOF
 
       curl -fsSL ${RAW}/scripts/vm-setup.sh | bash -s ${PROJECT} ${RUN_ID}
 
- 2. Start the screen recording (REQUIRED; it verifies itself — YES/NO):
+ 2. Start the guided wizard — from here every step is just RETURN:
 
-      ~/tta/start-recording.sh
+      ~/tta/begin.sh
 
- 3. Open the run guide (loads the startup instruction onto the clipboard):
-
-      ~/tta/open-guide.sh
+    It starts the stills camera, the screen recording (with its clock
+    window), the run guide (clipboard pre-loaded), and finally launches
+    the agent. You press Return between steps, Command+V at the end.
 
  4. Follow the guide: launch the agent, press Command+V, Return.
     THE CLOCK STARTS AT THAT PASTE.
