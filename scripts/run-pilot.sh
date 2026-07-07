@@ -132,20 +132,27 @@ step 7 "Setup complete — the rest happens inside the VM window."
 printf '\n\n'
 cat <<EOF
 ══════════════════════════════════════════════════════════════════════════════
- READY: '${VM}' is booted and staged. Do the rest IN THE VM WINDOW
- (on the VM host's desktop / your Screen Sharing view):
+ READY: '${VM}' is booted and staged. The rest happens INSIDE THE VM.
 
- 1. Open Terminal inside the VM and paste this ONE block
+ 0. FIND THE VM WINDOW: it is a separate window on this desktop named
+    '${VM}' showing a whole macOS desktop. Not seeing it? Open
+    Mission Control (F3, or swipe up with 3 fingers) — it may be on
+    another Space. CLICK INSIDE that window: from then on your keyboard
+    and mouse control the VM (the Mac-in-a-window), not this machine.
+
+ 1. Inside the VM: press Cmd-Space, type Terminal, press Return (this
+    opens the VM's OWN Terminal). Paste this ONE block into it
     (unpacks the challenge + starts the 30s stills loop):
 
     unzip -q ~/${PROJECT}-starter.zip -d ~/challenge && mkdir -p ~/tta && \\
     mv ~/capture-stills.sh ~/tta/ && chmod +x ~/tta/capture-stills.sh && \\
     RUN_ID=${RUN_ID} INTERVAL=30 ~/tta/capture-stills.sh > ~/tta/stills.log 2>&1 &
 
- 2. QuickTime Player → File → New Screen Recording → record the ENTIRE screen.
-    (At the end: stop, save as recording.mov to the Desktop.)
+ 2. Still inside the VM: Cmd-Space, type QuickTime, Return →
+    File → New Screen Recording → record the ENTIRE screen. Leave it running.
+    (At the end: stop, save as recording.mov to the VM's Desktop.)
 
- 3. In the VM Terminal:   cd ~/challenge/${PROJECT} && claude
+ 3. Back in the VM's Terminal:   cd ~/challenge/${PROJECT} && claude
     Paste the startup instruction from the runbook VERBATIM.
     ⏱  The clock starts at that paste. Persona rules apply from here.
 
