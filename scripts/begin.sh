@@ -4,7 +4,7 @@
 # fresh (block-graphic header + colored step tracker + ONE pulsing
 # highlighter "PRESS RETURN" action) — the operator never sees a scrollback
 # wall, and the recording only ever shows the current step.
-HARNESS_VERSION="1.6.20"
+HARNESS_VERSION="1.6.21"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 ATTNF="$HOME/tta/attention"
 export LANG="${LANG:-en_US.UTF-8}"
@@ -249,5 +249,15 @@ claude config set -g theme "$CLAUDE_THEME" >/dev/null 2>&1 || true
 # ring the terminal bell whenever Claude needs input — our recording profile
 # renders it as a VISUAL screen flash (no sound; screenshare-proof)
 claude config set -g preferredNotifChannel terminal_bell >/dev/null 2>&1 || true
-"$HOME/tta/tl" claude_launch
-cd "$HOME/challenge/$PROJECT" && exec claude
+# PERMISSIONS policy (run.conf, default auto): auto = --dangerously-skip-
+# permissions — the sanctioned mode for disposable sandbox VMs; kills every
+# approve/don't-ask-again tap so operator latency measures ANSWERS, not
+# clicking. Recorded in the timing log for run-comparability evidence.
+PERMISSIONS="${PERMISSIONS:-auto}"
+if [ "$PERMISSIONS" = "auto" ]; then
+  "$HOME/tta/tl" "claude_launch mode=skip-permissions"
+  cd "$HOME/challenge/$PROJECT" && exec claude --dangerously-skip-permissions
+else
+  "$HOME/tta/tl" "claude_launch mode=ask-permissions"
+  cd "$HOME/challenge/$PROJECT" && exec claude
+fi

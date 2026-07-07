@@ -4,7 +4,7 @@
 # prompt, installs the run tools (~/tta/*.sh), and docks this window left.
 # Usage:  curl -fsSL <raw>/scripts/vm-setup.sh | bash -s [project] [run-id]
 set -euo pipefail
-HARNESS_VERSION="1.6.20"
+HARNESS_VERSION="1.6.21"
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
 RAW="https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main"
@@ -34,6 +34,19 @@ chmod +x "$HOME"/tta/*.sh
 # tl = timing-log stamper as a REAL script (works from any window/shell)
 printf '#!/bin/bash\nprintf "%%s\\tguest\\t%%s\\n" "$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)" "$*" >> "$HOME/tta/run-times.log"\n' > "$HOME/tta/tl"
 chmod +x "$HOME/tta/tl"
+
+say "pre-trusting the challenge folder (no trust dialog at agent launch)..."
+if [ ! -f "$HOME/.claude.json" ]; then
+  printf '{"projects":{"%s":{"hasTrustDialogAccepted":true}}}\n' "$HOME/challenge/$PROJECT" > "$HOME/.claude.json"
+else
+  python3 - "$HOME/.claude.json" "$HOME/challenge/$PROJECT" <<'PYEOF' || say "  (could not merge trust flag - the trust dialog may appear once)"
+import json, sys
+p, proj = sys.argv[1], sys.argv[2]
+d = json.load(open(p))
+d.setdefault("projects", {}).setdefault(proj, {})["hasTrustDialogAccepted"] = True
+json.dump(d, open(p, "w"))
+PYEOF
+fi
 
 say "starting the stills camera (1 photo / 30s)..."
 { RUN_ID="$RUN_ID" INTERVAL=30 "$HOME/tta/capture-stills.sh" > "$HOME/tta/stills.log" 2>&1 & }

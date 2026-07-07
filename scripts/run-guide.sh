@@ -21,7 +21,7 @@
 # guide_opened_clipboard_loaded into the timing log.
 #
 # Usage: run-guide.sh [project] [run-id]   (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.20"
+HARNESS_VERSION="1.6.21"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
@@ -174,7 +174,8 @@ while :; do
       L  ""
       BL "  YOUR ONLY MOVES WHILE THE RUN IS LIVE:"
       L  "    ▪ Agent asks a question?   Shortest sensible answer."
-      L  "    ▪ Permission prompt?       Approve it. That is normal use."
+      L  "    ▪ Permission prompt?       Approve it. (Runs normally"
+      L  "      auto-approve these - seeing one at all is rare.)"
       L  "    ▪ NEVER suggest features, tools, designs, or approaches."
       L  "    ▪ Agent idle ~60s with no question?  Type exactly:  continue"
       L  "    ▪ Jot down anything you type, with a rough time."
