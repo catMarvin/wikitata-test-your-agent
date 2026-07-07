@@ -4,7 +4,7 @@
 # fresh (block-graphic header + colored step tracker + ONE pulsing
 # highlighter "PRESS RETURN" action) — the operator never sees a scrollback
 # wall, and the recording only ever shows the current step.
-HARNESS_VERSION="1.6.14"
+HARNESS_VERSION="1.6.15"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 ATTNF="$HOME/tta/attention"
 export LANG="${LANG:-en_US.UTF-8}"
@@ -139,11 +139,19 @@ press_return "▶▶ PRESS RETURN to begin ◀◀"
 
 # ---- STEP 1: stills camera (automatic; fresh capture state on re-run) ----
 pkill -f capture-stills.sh 2>/dev/null; pkill -INT -x screencapture 2>/dev/null; sleep 1
-# a PRIOR run's stamps would fast-forward the self-advancing guide past its
-# LAUNCH/PASTE panels — rotate them aside (never delete: they are evidence)
+# a PRIOR run's leftovers would pollute THIS run — rotate them aside (never
+# delete: they are evidence). Stamps fast-forward the self-advancing guide;
+# stale stills glob into the new flip-book manifest; recording.mov is the
+# prior movie.
+NOWS=$(date +%s)
 if grep -q -e claude_launch -e run_end "$HOME/tta/run-times.log" 2>/dev/null; then
-  mv "$HOME/tta/run-times.log" "$HOME/tta/run-times.prev.$(date +%s).log"
+  mv "$HOME/tta/run-times.log" "$HOME/tta/run-times.prev.$NOWS.log"
 fi
+if [ -n "$(ls "$HOME/tta/stills/" 2>/dev/null)" ]; then
+  mv "$HOME/tta/stills" "$HOME/tta/stills.prev.$NOWS"
+  rm -f "$HOME/tta/manifest.json"
+fi
+[ -s "$HOME/tta/recording.mov" ] && mv "$HOME/tta/recording.mov" "$HOME/tta/recording.prev.$NOWS.mov"
 { RUN_ID="$RUN_ID" INTERVAL=30 "$HOME/tta/capture-stills.sh" > "$HOME/tta/stills.log" 2>&1 & }
 "$HOME/tta/tl" stills_started
 
