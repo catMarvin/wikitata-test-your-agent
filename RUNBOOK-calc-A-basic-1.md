@@ -11,9 +11,9 @@
 
 ## Setup (on the mini)
 
-**1.** Screen Share into the mini (Finder → Network → Todds-Mac-mini → Share Screen, or `open vnc://m4` from your MacBook). You need its GUI — the VM window lives there.
+**1.** SSH into the mini from your Mac (`ssh m4`) — the VM's display will come to you over VNC in step 2, so you don't need the mini's own desktop.
 
-**2.** Open Terminal **on the mini** and stage the run:
+**2.** In that SSH session, stage the run:
 ```bash
 mkdir -p ~/tta-runs/staging && cd ~/tta-runs/staging
 curl -fsSLO https://github.com/catMarvin/wikitata-test-your-agent/releases/latest/download/calculator-starter.zip
@@ -21,11 +21,11 @@ curl -fsSLO https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent
 curl -fsSLO https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/export-run.sh
 chmod +x capture-stills.sh export-run.sh
 tart clone tta-base-a run-calc-A-basic-1
-tart run run-calc-A-basic-1
+tart run run-calc-A-basic-1 --vnc
 ```
-✅ Expect: the clone takes seconds (it's a copy-on-write, not a real copy), then a VM window opens on the mini's display and boots to a macOS desktop in ~30–60s (auto-logs-in as `admin`). **Note: `tart run` keeps holding this terminal while the VM lives — that's normal.**
+✅ Expect, in order: the clone command returns (copy-on-write, not a real copy — disk-usage growth afterward is normal VM boot writes), then a `vnc://…` URL prints. **Open that URL from YOUR Mac** (paste into Safari, or Finder ⌘K) — the VM's screen appears in a window and lands on a logged-in desktop (`admin`). **`tart run` keeps holding this terminal while the VM lives — that's normal.** Health checks any time, from another tab: `tart list` (state=running) and `tart ip run-calc-A-basic-1` (prints an IP once booted).
 
-**3.** Open a **NEW Terminal tab on the mini** (⌘T — the first tab stays attached to the VM) and push the starter + capture script into the guest:
+**3.** Open a **second SSH tab** (⌘T, `ssh m4` — the first tab stays attached to the VM) and push the starter + capture script into the guest:
 ```bash
 cd ~/tta-runs/staging
 ```
@@ -35,7 +35,7 @@ scp -o StrictHostKeyChecking=no calculator-starter.zip capture-stills.sh admin@$
 ```
 ✅ Expect: two files copy without a password prompt.
 
-**4.** Click into the **VM window**, open **Terminal** (⌘-Space, type Terminal), and run:
+**4.** Click into the **VNC window** (the VM's screen), open **Terminal** there (⌘-Space, type Terminal), and run:
 ```bash
 unzip -q ~/calculator-starter.zip -d ~/challenge && mkdir -p ~/tta
 mv ~/capture-stills.sh ~/tta/ && chmod +x ~/tta/capture-stills.sh
