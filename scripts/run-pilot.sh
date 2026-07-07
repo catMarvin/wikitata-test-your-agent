@@ -103,19 +103,15 @@ cat <<EOF
     { RUN_ID=${RUN_ID} INTERVAL=30 ~/tta/capture-stills.sh > ~/tta/stills.log 2>&1 & } && \\
     tl stills_started && echo READY
 
- 2. Start the screen recording (REQUIRED evidence for instrumented runs).
-    Paste this in the VM's Terminal — it opens QuickTime already in
-    screen-recording mode:
+ 2. Start the FULL-SCREEN video recording (REQUIRED evidence for
+    instrumented runs) — paste this ONE line in the VM's Terminal;
+    no QuickTime, no clicking, records the entire screen:
 
-      osascript -e 'tell application "QuickTime Player" to new screen recording' -e 'tell application "QuickTime Player" to activate'
+      [ -f ~/tta/rec.pid ] && kill -INT \$(cat ~/tta/rec.pid) 2>/dev/null; { screencapture -v -x ~/tta/recording.mov >/dev/null 2>&1 & echo \$! > ~/tta/rec.pid; }; sleep 2; ls -l ~/tta/recording.mov && tl recording_started && echo RECORDING
 
-    FIRST TIME ONLY, macOS asks permission (Terminal controlling QuickTime,
-    and Screen Recording) — approve each; if QuickTime asks to relaunch,
-    let it and paste the command again.
-    A recording toolbar appears: click Record, then click anywhere on the
-    screen to record the ENTIRE screen. Leave it recording.
-    (Fallback if the command errors: open QuickTime from Cmd-Space ->
-    File -> New Screen Recording.)
+    You should see RECORDING and the file listed. FIRST TIME ONLY, macOS
+    may ask Screen Recording permission for Terminal — approve it, then
+    paste the same line again (it is safe to re-paste).
 
  3. In the VM's Terminal, launch the agent (this stamps the clock-start):
 
@@ -124,10 +120,10 @@ cat <<EOF
     Paste the startup instruction from the runbook VERBATIM.
     The run clock starts at that paste. Persona rules apply from here.
 
- AFTER THE RUN (agent done, or 45-min cap): in the VM's Terminal type
-    tl run_end
- then stop + save the recording (recording.mov, VM Desktop), and back on
- the VM host:   cd ${STAGE} && ./export-run.sh ${VM} ${RUN_ID}
+ AFTER THE RUN (agent done, or 45-min cap): in the VM's Terminal paste:
+    tl run_end; kill -INT \$(cat ~/tta/rec.pid); sleep 3; ls -l ~/tta/recording.mov
+ (stops + finalizes the recording — the file size shown is the proof),
+ then back on the VM host:   cd ${STAGE} && ./export-run.sh ${VM} ${RUN_ID}
 ==============================================================================
 EOF
 

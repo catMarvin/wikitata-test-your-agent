@@ -76,19 +76,17 @@ The boxed checklist from Step 2 printed a paste-block. Copy that whole block (al
 
 ### Step 5. Start the screen recording — MANUAL. This is the step people miss.
 
-The stills camera from Step 4 is automatic. The **full video recording is not** — nothing records the screen unless you start it now. *(Required for instrumented runs — it is a mandatory evidence witness. Casual challengers outside the harness: recommended, not required — see CAPTURE.md.)*
+The stills camera from Step 4 is automatic; the video recording starts with one more paste. *(Required for instrumented runs — it is a mandatory evidence witness. Casual challengers outside the harness: recommended, not required — see CAPTURE.md.)*
 
-1. In the VM's Terminal, paste this and press **Return** — it opens QuickTime already in screen-recording mode:
+1. In the VM's Terminal, paste this **one line** and press **Return** — it records the **entire screen** to a file, no QuickTime, no clicking, nothing to aim:
    ```bash
-   osascript -e 'tell application "QuickTime Player" to new screen recording' -e 'tell application "QuickTime Player" to activate'
+   [ -f ~/tta/rec.pid ] && kill -INT $(cat ~/tta/rec.pid) 2>/dev/null; { screencapture -v -x ~/tta/recording.mov >/dev/null 2>&1 & echo $! > ~/tta/rec.pid; }; sleep 2; ls -l ~/tta/recording.mov && tl recording_started && echo RECORDING
    ```
-2. **First time only:** macOS will ask permission — once for Terminal controlling QuickTime (click **OK**) and once for Screen Recording (click **Allow** / open System Settings and switch it on; if QuickTime asks to relaunch, let it, then paste the command again).
-3. A recording toolbar appears on screen. Click **Record**, then click **once anywhere on the screen** — that starts recording the entire screen.
-4. **Walk away from QuickTime.** It must keep recording untouched until the run is over.
-   *(Fallback if the command errors: **⌘-space** → `QuickTime` → **Return** → menu bar **File → New Screen Recording**, then continue at 3.)*
+2. **First time only:** macOS may ask Screen Recording permission for Terminal — click **Allow** (open System Settings and switch it on if asked), then **paste the same line again**. Re-pasting is always safe: the line stops any previous recorder before starting a new one.
 
-✅ **You should now see:** a small stop symbol (⏹) in the VM's menu bar — that is how you know it is recording.
-🚫 **Do not proceed to Part 3 until that symbol is there.** A run without the recording is missing a required piece of evidence.
+✅ **You should now see:** the word `RECORDING` and the `recording.mov` file listed.
+🚫 **Do not proceed to Part 3 until you see `RECORDING`.** A run without the recording is missing a required piece of evidence.
+*(Prefer a visible recording indicator? QuickTime works too: **⌘-space** → `QuickTime` → **File → New Screen Recording** → choose **Record Entire Screen** — the toolbar defaults to a selection lasso, so pick the full-screen option — then save as `recording.mov` to the VM Desktop at the end. Use one method, not both.)*
 
 ---
 
@@ -134,10 +132,12 @@ Copy the block below **exactly, as one single message**, paste it into Claude Co
 
 ### Step 9. Stamp the end + stop the recording (inside the VM)
 
-1. In the VM's Terminal: type `tl run_end` and press **Return** (timing stamp; `command not found` is safe to ignore).
-2. Click the ⏹ stop symbol in the VM's menu bar.
-3. QuickTime shows the video: **File → Save**, name it exactly `recording.mov`, save it to the VM's **Desktop**.
-4. Quit QuickTime.
+1. In the VM's Terminal, paste and press **Return** — stamps the end time, stops the recorder, and shows the finished file:
+   ```bash
+   tl run_end; kill -INT $(cat ~/tta/rec.pid); sleep 3; ls -l ~/tta/recording.mov
+   ```
+✅ **You should now see:** `recording.mov` listed with a large file size.
+   *(If you used the QuickTime alternative instead: click its ⏹ menu-bar symbol, **File → Save** as `recording.mov` to the VM's **Desktop**, quit QuickTime.)*
 
 ### Step 10. Export the results bundle (on the VM host)
 
