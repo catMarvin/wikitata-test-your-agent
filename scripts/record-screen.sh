@@ -18,7 +18,7 @@
 # window switches to the stopped banner with the file listing as proof.
 #
 # Usage: record-screen.sh [output.mov]   (default ~/tta/recording.mov)
-HARNESS_VERSION="1.6.4"
+HARNESS_VERSION="1.6.5"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 OUT="${1:-$HOME/tta/recording.mov}"
 mkdir -p "$(dirname "$OUT")"
@@ -52,7 +52,7 @@ START=$(date +%s)
     T="$(printf %02d $((S/60))):$(printf %02d $((S%60)))"
 
     LINES_OUT=()
-    if [ "$COLS" -ge 46 ] && [ "$ROWS" -ge 16 ]; then
+    if [ "$COLS" -ge 52 ] && [ "$ROWS" -ge 16 ]; then
       r1=""; r2=""; r3=""; r4=""; r5=""
       i=0
       while [ $i -lt ${#T} ]; do
@@ -60,15 +60,18 @@ START=$(date +%s)
         r1="$r1$a"; r2="$r2$b"; r3="$r3$c"; r4="$r4$d"; r5="$r5$e"
         i=$((i+1))
       done
-      # the chase: a dot walks the oval of a '0' once per second (8 steps)
-      glyph 0
+      # separator colon, then the chase: ONLY a period orbiting an invisible
+      # oval (nothing else drawn), one revolution per second (8 steps)
+      glyph :
+      r1="$r1$a"; r2="$r2$b"; r3="$r3$c"; r4="$r4$d"; r5="$r5$e"
+      a="       "; b="       "; c="       "; d="       "; e="       "
       case $F in
-        0) a="${a:0:3}.${a:4}";;  1) b="${b:0:5}.${b:6}";;
-        2) c="${c:0:5}.${c:6}";;  3) d="${d:0:5}.${d:6}";;
-        4) e="${e:0:3}.${e:4}";;  5) d="${d:0:1}.${d:2}";;
-        6) c="${c:0:1}.${c:2}";;  7) b="${b:0:1}.${b:2}";;
+        0) a="   .   ";;  1) b="     . ";;
+        2) c="      .";;  3) d="     . ";;
+        4) e="   .   ";;  5) d=" .     ";;
+        6) c=".      ";;  7) b=" .     ";;
       esac
-      r1="$r1 $a"; r2="$r2 $b"; r3="$r3 $c"; r4="$r4 $d"; r5="$r5 $e"
+      r1="$r1$a"; r2="$r2$b"; r3="$r3$c"; r4="$r4$d"; r5="$r5$e"
       LINES_OUT=( \
         "" \
         "  >>> SCREEN RECORDING IN PROGRESS <<<" \
