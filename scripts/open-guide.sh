@@ -1,7 +1,7 @@
 #!/bin/bash
 # open-guide.sh — opens the run-guide window (docked top-right): it loads the
 # startup instruction onto the clipboard and walks the launch + paste steps.
-HARNESS_VERSION="1.6.3"
+HARNESS_VERSION="1.6.4"
 . "$HOME/tta/run.conf" 2>/dev/null || { PROJECT=calculator; RUN_ID=calc-A-basic-1; }
 osascript -e "tell application \"Terminal\" to do script \"~/tta/run-guide.sh $PROJECT $RUN_ID\"" >/dev/null
 osascript -e 'tell application "Finder" to set db to bounds of window of desktop' \
