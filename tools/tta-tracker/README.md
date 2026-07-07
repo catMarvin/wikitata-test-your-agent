@@ -15,13 +15,12 @@ The tier-B instrument for the wikiTaTa "Test Your Agent" protocol: tier B = bare
    claude mcp add -s user tta-tracker node /FULL/PATH/TO/tools/tta-tracker/index.js
    ```
    Expect: `claude mcp list` shows exactly one server: `tta-tracker`.
-3. Install the passive Stop hook — merge into `~/.claude/settings.json`:
+3. Install the passive hook on BOTH Stop and SessionEnd — merge into `~/.claude/settings.json`. (Stop alone can fire before the final transcript flush in one-shot `-p` runs; SessionEnd catches the completed tally — verified live on golden image B.)
    ```json
    {
      "hooks": {
-       "Stop": [
-         { "hooks": [ { "type": "command", "command": "node /FULL/PATH/TO/tools/tta-tracker/hooks/track-turn.mjs" } ] }
-       ]
+       "Stop":       [ { "hooks": [ { "type": "command", "command": "node /FULL/PATH/TO/tools/tta-tracker/hooks/track-turn.mjs" } ] } ],
+       "SessionEnd": [ { "hooks": [ { "type": "command", "command": "node /FULL/PATH/TO/tools/tta-tracker/hooks/track-turn.mjs" } ] } ]
      }
    }
    ```
