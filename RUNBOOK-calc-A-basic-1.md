@@ -1,4 +1,5 @@
 # Operator Runbook — pilot run `calc-A-basic-1`
+**Version 1.2** · revisions increment 1.1, 1.2, 1.3… (never a 2.x without a protocol change)
 
 **What this is:** you operate the FIRST pilot cell — tier **A** (bare Claude, no MCP), project **Calculator**, persona **BASIC**. Total hands-on time ≈ 5 minutes of setup, then you mostly watch. Hard cap: **45 minutes**, target 15.
 
@@ -88,3 +89,6 @@ open ~/tta-runs/calc-A-basic-1/index.html
 **11.** Tell Claude (any wikiTaTa chat): *"pilot bundle is at ~/tta-runs/calc-A-basic-1 on the mini"* — analysis, token accounting, and the run-report card happen from there. Don't delete the VM; leave it stopped for inspection (`tart stop run-calc-A-basic-1` if it's still running).
 
 **Something broke?** Don't improvise — note where, leave everything as-is, and report. A voided pilot that teaches us something IS the pilot doing its job.
+
+---
+*Revisions: 1.0 initial · 1.1 step-3 opens a new tab (`tart run` holds its terminal) · 1.2 ssh-first flow with `--vnc` display + state-based expectations + health checks.*
