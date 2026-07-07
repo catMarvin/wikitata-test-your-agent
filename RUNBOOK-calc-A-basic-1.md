@@ -80,17 +80,15 @@ The stills camera from Step 4 is automatic; the video recording starts with one 
 
 1. In the VM's Terminal, paste this **one line** and press **Return** — it opens a **dedicated recording window** with a live big-digit elapsed clock, recording the **entire screen** (no QuickTime, no clicking, nothing to aim):
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set font size of selected tab of front window to 16' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, sh * 11 div 20, sw, sh - 80}' >/dev/null 2>&1 || true
+   curl -fsSL https://raw.githubusercontent.com/catMarvin/wikitata-test-your-agent/main/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set font size of selected tab of front window to 16' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, sh * 11 div 20, sw, sh - 80}' >/dev/null 2>&1 || true; sleep 3; pgrep -x screencapture >/dev/null && echo ">>> YES: RECORDING IS LIVE — continue to the next step <<<" || echo ">>> NO: NOT RECORDING — STOP HERE. Approve the Screen Recording permission (password: admin), then run this step again. Do NOT continue until this says YES. <<<"
    ```
-2. **First time only:** macOS may ask Screen Recording permission for Terminal — click **Allow** (System Settings opens: switch **Terminal** on, enter the VM password `admin`, let Terminal quit & reopen), then paste the line again.
-3. **Verify it, don't trust it** — back in your main Terminal window, paste:
-   ```bash
-   pgrep -x screencapture >/dev/null && echo ">>> YES: SCREEN IS BEING RECORDED <<<" || echo ">>> NO: NOT RECORDING — redo the recording step <<<"
-   ```
+2. **The line verifies itself** — it always ends by telling you which world you are in:
+   - `>>> YES: RECORDING IS LIVE — continue to the next step <<<` → go to Step 6.
+   - `>>> NO: NOT RECORDING — STOP HERE ... <<<` → macOS is asking for (or needs) the Screen Recording permission: click **Allow** (System Settings opens: switch **Terminal** on, password `admin`, let Terminal quit & reopen), then paste the same line again. Re-pasting is always safe — it stops any previous recorder before starting a new one.
 
-✅ **You should now see:** a second Terminal window showing `>>> SCREEN RECORDING IN PROGRESS <<<` with a **big ASCII clock counting up every second**, and the verify line answering `YES`. Clock ticking = recording; clock gone (`NO LONGER BEING RECORDED`) = not.
-🚫 **Do not proceed to Part 3 until the verify line says YES.** A run without the recording is missing a required piece of evidence.
-📺 The window stays visible the entire run — while it shows the banner, you're recording; when it drops back to a prompt, you're not. Run the verify line any time you're unsure.
+✅ **You should now see:** the `YES: RECORDING IS LIVE` verdict in this window, and the elapsed clock ticking in the recording window. Clock ticking = recording; clock gone (`NO LONGER BEING RECORDED`) = not.
+🚫 **A `NO` verdict means stop — full stop.** A run without the recording is missing a required piece of evidence.
+📺 Re-check any time during the run: `pgrep -x screencapture >/dev/null && echo YES || echo NO`
 
 ---
 
