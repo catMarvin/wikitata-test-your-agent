@@ -109,11 +109,11 @@ cat <<EOF
     instrumented runs). This ONE line opens a dedicated recording window
     with a live big-digit elapsed clock — clock ticking = recording:
 
-      curl -fsSL ${RAW}/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set font size of selected tab of front window to 16' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, sh * 11 div 20, sw, sh - 80}' >/dev/null 2>&1 || true
+      curl -fsSL ${RAW}/scripts/record-screen.sh -o ~/tta/record-screen.sh && chmod +x ~/tta/record-screen.sh && osascript -e 'tell application "Terminal" to do script "~/tta/record-screen.sh"' && osascript -e 'tell application "Finder" to set db to bounds of window of desktop' -e 'set sw to item 3 of db' -e 'set sh to item 4 of db' -e 'tell application "Terminal" to set font size of selected tab of front window to 16' -e 'tell application "Terminal" to set bounds of front window to {sw * 3 div 5, sh * 11 div 20, sw, sh - 80}' >/dev/null 2>&1 || true; sleep 3; pgrep -x screencapture >/dev/null && echo ">>> YES: RECORDING IS LIVE — continue to the next step <<<" || echo ">>> NO: NOT RECORDING — STOP HERE. Approve the Screen Recording permission (password: admin), then run this step again. Do NOT continue until this says YES. <<<"
 
-    FIRST TIME ONLY: approve the Screen Recording permission (password
-    admin), let Terminal reopen, paste again. Then VERIFY from your main
-    Terminal — do not trust, check:
+    The line VERIFIES ITSELF: it always ends by printing YES (continue)
+    or NO (stop, approve the permission, paste the same line again).
+    DO NOT continue on NO. Re-check any time later with:
 
       pgrep -x screencapture >/dev/null && echo YES-RECORDING || echo NOT-RECORDING
 
