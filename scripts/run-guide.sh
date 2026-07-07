@@ -21,7 +21,7 @@
 # guide_opened_clipboard_loaded into the timing log.
 #
 # Usage: run-guide.sh [project] [run-id]   (defaults: calculator, calc-A-basic-1)
-HARNESS_VERSION="1.6.24"
+HARNESS_VERSION="1.6.25"
 SELF_SHA=$(shasum "$0" 2>/dev/null | cut -c1-8)
 PROJECT="${1:-calculator}"
 RUN_ID="${2:-calc-A-basic-1}"
@@ -52,6 +52,18 @@ rm -f "$MARK"
 STATE=launch
 LIVE_AT=0
 TICK=0
+# AUTO-FINISH: the guide watches the transcript; when it stops growing for
+# IDLE_DONE seconds (agent done in a skip-permissions run), the guide FIRES
+# ~/tta/finish.sh itself — no manual Command+N. run.conf can disable it
+# (AUTO_FINISH=off) or retune the idle window (TTA_IDLE_DONE).
+. "$HOME/tta/run.conf" 2>/dev/null || true
+AUTO_FINISH="${AUTO_FINISH:-on}"
+IDLE_DONE="${TTA_IDLE_DONE:-180}"    # transcript quiet this long = agent done
+MIN_RUN=90                            # never auto-fire in the first 90s
+LAST_BYTES=0
+IDLE_SINCE=0
+AUTOFIRED=0
+IDLE_SECS=0
 
 # Panel line queue. Attributes:
 #   n normal · b bold · c cyan-bold (structure) · g green-bold (done/live-ok)
@@ -120,6 +132,21 @@ while :; do
           echo recording > "$ATTNF"
           printf '%s\tguest\tcap_reached_attention_to_recording\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$TLOG"
         fi
+        # transcript-idle detector (every ~2s): bytes stop growing => agent
+        # done. IDLE_SECS drives a visible countdown; at IDLE_DONE, fire finish.
+        if [ $(( TICK % 6 )) -eq 0 ]; then
+          NB=$(cat "$HOME"/.claude/projects/*/*.jsonl 2>/dev/null | wc -c | tr -d ' '); [ -n "$NB" ] || NB=0
+          if [ "$NB" -gt "$LAST_BYTES" ]; then LAST_BYTES=$NB; IDLE_SINCE=$(date +%s); fi
+          [ "$IDLE_SINCE" -eq 0 ] && IDLE_SINCE=$(date +%s)
+          IDLE_SECS=$(( $(date +%s) - IDLE_SINCE ))
+        fi
+        ELAPSED=$(( $(date +%s) - LIVE_AT ))
+        if [ "$AUTO_FINISH" = "on" ] && [ "$AUTOFIRED" -eq 0 ] && \
+           [ "$ELAPSED" -ge "$MIN_RUN" ] && [ "$IDLE_SECS" -ge "$IDLE_DONE" ]; then
+          AUTOFIRED=1
+          printf '%s\tguest\tguide_autofired_finish\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$TLOG"
+          osascript -e 'tell application "Terminal" to do script "~/tta/finish.sh"' >/dev/null 2>&1 || true
+        fi
         if ! pgrep -x screencapture >/dev/null 2>&1; then
           STATE=wrapup; echo guide > "$ATTNF"
           printf '%s\tguest\tguide_saw_recording_stop\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$TLOG"
@@ -184,15 +211,27 @@ while :; do
       L  "    ▪ Agent idle ~60s with no question?  Type exactly:  continue"
       L  "    ▪ Jot down anything you type, with a rough time."
       L  ""
-      L  "  THE RUN ENDS when the agent declares done - or at 45:00,"
-      L  "  whichever comes first. When the agent says it is DONE:"
-      BL "    open a NEW Terminal window (Command+N) and run:"
-      BL "      ~/tta/finish.sh"
-      L  "  It puts the finished app on camera, then stops the"
-      L  "  recording and wraps up - all by itself."
+      L  "  THE RUN ENDS when the agent declares done - or at 45:00."
+      if [ "$AUTO_FINISH" = "on" ]; then
+        RE=$(( IDLE_DONE - IDLE_SECS ))
+        if [ "$IDLE_SECS" -ge 20 ] && [ "$RE" -gt 0 ] && [ $(( $(date +%s) - LIVE_AT )) -ge "$MIN_RUN" ]; then
+          QL "  ▶▶ agent looks DONE - auto-finishing in ${RE}s ◀◀"
+          L  "     (or run ~/tta/finish.sh now to wrap immediately)"
+        else
+          L  "  When the agent goes quiet, THIS guide auto-runs finish for"
+          L  "  you (opens the app, prompts the tests). No Command+N needed."
+        fi
+      else
+        L  "  When the agent says DONE: open a NEW Terminal (Command+N),"
+        BL "    run  ~/tta/finish.sh"
+      fi
       TKB=$(du -sk "$HOME/.claude/projects" 2>/dev/null | awk '{print $1}')
       L  ""
-      GL "  ● heartbeat: agent transcript ${TKB:-0} KB and growing"
+      if [ "$IDLE_SECS" -ge 20 ]; then
+        L  "  ● transcript ${TKB:-0} KB - quiet ${IDLE_SECS}s"
+      else
+        GL "  ● heartbeat: agent transcript ${TKB:-0} KB and growing"
+      fi
       ;;
     finish)
       header 4
